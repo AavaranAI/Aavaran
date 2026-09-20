@@ -2,12 +2,29 @@
 
 **READ THIS FIRST.**
 
-## ⭐⭐ PICK UP HERE — close of 19 Sep 2026
+## ⭐⭐ PICK UP HERE — close of 20 Sep 2026
 
-**Tree CLEAN, both remotes PUSHED, `./test-all.sh` = 22 passed 0 skipped, `tsc` gate
-green.** 28 commits today. Everything below the 18 Sep sections is still true.
+**Tree CLEAN, both remotes PUSHED, `./test-all.sh --full` = 32 passed 0 skipped,
+`tsc` clean at 0 type errors with the gate covering EVERY error.** 7 commits on 20 Sep.
 
-### 📦 RELEASED v0.3.0 — `github.com/AavaranAI/Aavaran/releases/tag/v0.3.0`
+### 📦 RELEASED v0.4.0 — `github.com/AavaranAI/Aavaran/releases/tag/v0.4.0` ← LATEST
+
+**7 assets**, marked latest: `Aavaran-v0.4.0-chrome.zip` (1.65 MB, scan-only, Load
+unpacked), `Aavaran-v0.4.0-full.zip` (10.7 MB, source + server, built by `git archive` of
+the tag), both `Start Aavaran` and both `Update Aavaran` launchers, and
+`INSTALL-OLLAMA.txt`. Both zips are under Gmail's 25 MB, which is the real route to Ma'am.
+
+✅ **Verified by DOWNLOADING the published asset**, not the local file — the v0.3.0
+near-miss was a stale zip that looked exactly like a fresh build. The downloaded
+`chrome.zip` reports `version 0.4.0`, `variant scan-only`, and no `/Users/` string.
+
+⚠⚠ **0.4.0 IS A BREAKING CHANGE BETWEEN THE TWO HALVES.** The server now requires an
+`x-aavaran-client` header on `/act` and `/pull`, and **an extension from before 0.4.0 does
+not send one** — it gets a 403. The two halves update separately (the extension reloads in
+seconds, the server is a process somebody started days ago), so **the 403 body now says in
+as many words to reload the extension**. Anyone told to update must update BOTH.
+
+### 📦 v0.3.0 — superseded — `github.com/AavaranAI/Aavaran/releases/tag/v0.3.0`
 
 **7 assets**, and it is the repo's *latest* release: `Aavaran-v0.3.0-chrome.zip` (1.57 MB,
 scan-only, Load unpacked), `Aavaran-v0.3.0-full.zip` (9.68 MB, source + server), both
