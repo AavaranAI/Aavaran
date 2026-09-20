@@ -4,8 +4,60 @@
 
 ## ⭐⭐ PICK UP HERE — close of 20 Sep 2026
 
-**Tree CLEAN, both remotes PUSHED, `./test-all.sh --full` = 32 passed 0 skipped,
-`tsc` clean at 0 type errors with the gate covering EVERY error.** 7 commits on 20 Sep.
+**Tree CLEAN, both remotes PUSHED (`origin` and `personal` both at `033823d`),
+`./test-all.sh --full` = 32 passed 0 skipped, `tsc` clean at 0 type errors with the gate
+covering EVERY error.** 9 commits on 20 Sep. Nothing is uncommitted and nothing is
+half-done — this is a safe place to stop.
+
+### ⏭⏭ DO THESE FIRST — the authoritative list, 20 Sep
+
+The older "first thing to do next session" further down this file is from the 19th and
+predates everything above it. **This block supersedes it.**
+
+**Code — one open item, and it is the same one:**
+
+1. **Drive `httpbin.org/forms/post` end to end, by hand, in the browser.** Goal: *"Fill in
+   the form and submit it"*. Five rounds of fixes converge on that one page — the batch
+   ask, the clock field, fill-and-verify, the submit nudge — each verified in pieces and
+   **never once together by hand**. `demo/needs-value.html` is the smaller version for the
+   ask-and-fill path.
+   ⚠ On 20 Sep he posted an httpbin POST response showing a completed pizza order (name,
+   email, phone, 14:00, small, four toppings). **It was never established whether Aavaran
+   did that or he filled it manually — ASK HIM before recording this as done.**
+
+**Not code, and the 30 Sep deadline runs on it:**
+
+2. **Send the designers the pack.** Regenerated 20 Sep and ready: `design/`
+   `Aavaran-Canva-Template.pptx` + `.pdf` (21 pages), `message-to-designers.txt`, and all
+   18 reference PNGs. ⚠ Jinshri and Vansh are redesigning from scratch, so the 5th-pass
+   panel is a **baseline to replace, not a brief** — his call whether to send the renders.
+3. **The SPOC email is still unsent** — `outreach/email-to-spoc.md` →
+   **pujasarkar@iimmumbai.ac.in**, attaching `SIH26171-Project-Report.pdf`.
+4. **Deck slide 1 portal fields** — Team ID is the only genuine unknown (Theme is
+   `Smart Automation`, already in the repo) — then re-export the PDF **from PowerPoint**.
+5. **Host the privacy policy** — the Chrome listing cannot be submitted without a public
+   URL and the repo is private. Everything else for both stores is in
+   `outreach/STORE-SUBMISSION.md`. S1/S2 need HIS Google and AMO accounts.
+
+**Still open in code, deliberately, from the 19 Sep queue:** C2 (read inside iframes —
+needs a design, not a flag), C1 (corpus list to hand to the team), and Firebase sync,
+which was **deferred not refused** — the honest version is client-side encryption so it
+only ever holds ciphertext.
+
+### 🖥 MACHINE STATE at close of 20 Sep
+
+- **The reasoning server is RUNNING** on `:8975` reporting version **0.4.0**. Check with
+  `curl -s 127.0.0.1:8975/health`; restart with
+  `cd server && .venv/bin/uvicorn main:app --port 8975`.
+- **ollama holds `qwen2.5vl:7b` resident**; `qwen2.5vl:3b` is also pulled (kept for the
+  tradeoff study, safe to `ollama rm` for 3.2 GB back).
+- ⚠ **Firefox is NOT installed — the DMG is MOUNTED** at `/Volumes/Firefox` from
+  `~/Downloads/Firefox 155.0.1.dmg`. `--full` needs
+  `export FIREFOX=/Volumes/Firefox/Firefox.app/Contents/MacOS/firefox`. Remount with
+  `hdiutil attach "…/Firefox 155.0.1.dmg" -nobrowse`. Safe to eject.
+- Screenshots regenerate with `node scripts/panel-shot.mjs` (19 states → `/tmp/panel-shots`)
+  and `node scripts/panel-shot-live.mjs` (the real extension). **Nothing of value lives in
+  `/tmp`** — every artefact worth keeping is committed.
 
 ### 📦 RELEASED v0.4.0 — `github.com/AavaranAI/Aavaran/releases/tag/v0.4.0` ← LATEST
 
@@ -440,7 +492,10 @@ Regenerated: `Aavaran-Canva-Template.pptx` + `.pdf` (21 pages), all **18** refer
 `design/reference/`, `CANVA-BRIEF.md` and `message-to-designers.txt`. **The pack is ready to
 send.**
 
-### ⏭ THE FIRST THING TO DO NEXT SESSION
+### ⏭ THE FIRST THING TO DO NEXT SESSION (19 Sep — SUPERSEDED)
+
+⚠ **Kept for its detail; the authoritative list is `⏭⏭ DO THESE FIRST` at the top of this
+file.** The machine-state note below is also stale — see `🖥 MACHINE STATE` up there.
 
 **Re-run the pizza form end to end in the browser** — `httpbin.org/forms/post`, goal
 "Fill in the form and submit it". Every fix from the last four rounds converges on that
