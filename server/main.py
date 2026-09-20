@@ -101,7 +101,10 @@ async def require_client(request: Request) -> None:
                 "hint": (
                     "This endpoint changes state on your machine, so it only accepts "
                     "calls from the Aavaran extension or its own tooling. A web page "
-                    "cannot set this header cross-origin, which is the point."
+                    "cannot set this header cross-origin, which is the point. "
+                    "If you have just updated the server, RELOAD THE EXTENSION too: "
+                    "builds before 0.4.0 do not send this header, and the two halves "
+                    "update separately."
                 ),
             },
         )
