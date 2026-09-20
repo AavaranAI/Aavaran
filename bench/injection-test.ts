@@ -207,7 +207,7 @@ if (!health?.ok) {
 } else {
   const res = await fetch(`${SERVER}/act`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-aavaran-client': '1' },
     body: JSON.stringify({ payload }),
   });
   if (!res.ok) {

@@ -86,7 +86,7 @@ console.log(`server    ${health.model} via ${health.backend}`);
 const t3 = performance.now();
 const res = await fetch(`${SERVER}/act`, {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: { 'content-type': 'application/json', 'x-aavaran-client': '1' },
   body: JSON.stringify({ payload }),
 });
 const networkMs = Math.round(performance.now() - t3);

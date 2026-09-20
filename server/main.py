@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel
@@ -46,13 +46,65 @@ REQUEST_TIMEOUT = float(os.environ.get("AGENT_TIMEOUT", "180"))
 
 app = FastAPI(title="SIH26171 reasoning server")
 
-# The client is a browser extension, so its origin is chrome-extension://<id>.
+# ---------------------------------------------------------------------------
+# Who is allowed to talk to this server
+# ---------------------------------------------------------------------------
+#
+# This listens on 127.0.0.1, and people read that as "only me". It is not: EVERY page
+# you visit can reach 127.0.0.1 from your browser. The comment here used to say "the
+# client is a browser extension, so its origin is chrome-extension://<id>" and then
+# allow_origins=["*"], which permitted exactly what it had just described as untrue.
+#
+# Two separate holes, and CORS only closes one of them:
+#
+#   1. READING our replies. A cross-origin POST carrying application/json is
+#      preflighted, so restricting the origin does stop an arbitrary site calling /act
+#      and reading the answer — along with /health, which names the model, the version
+#      and every model installed on the machine.
+#
+#   2. CAUSING the side effect. A POST with no Content-Type is a SIMPLE request: no
+#      preflight, so it is sent and executed whatever CORS says, and only the response
+#      is withheld. `POST /pull` takes no body — so any page you happened to be
+#      visiting could start a 6 GB download on your machine, and /act could be made to
+#      occupy the GPU. CORS cannot help here at all.
+#
+# So the origin is narrowed AND the state-changing endpoints require a custom header.
+# A cross-origin page cannot set a custom header without turning the request into a
+# preflighted one, and the preflight is what the narrowed origin now refuses. Node
+# callers (the benches, the drills) send no Origin at all, so CORS never applies to
+# them; they send the header instead, which is the same check for both.
+CLIENT_HEADER = "x-aavaran-client"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # chrome-extension://<32 letters>, moz-extension://<uuid>, and Safari's form.
+    allow_origin_regex=r"^(chrome|moz|safari-web)-extension://[A-Za-z0-9-]+$",
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+async def require_client(request: Request) -> None:
+    """Refuse a state-changing call that did not come from our own client.
+
+    Deliberately NOT a secret. It is not authentication and does not pretend to be —
+    anything running locally as you can send it. It closes the one hole that matters
+    for a browser-hosted attacker: a web page cannot add a header to a cross-origin
+    request without a preflight, and the preflight will not pass the origin check
+    above. That is the whole threat this server has.
+    """
+    if request.headers.get(CLIENT_HEADER) is None:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": f"missing {CLIENT_HEADER} header",
+                "hint": (
+                    "This endpoint changes state on your machine, so it only accepts "
+                    "calls from the Aavaran extension or its own tooling. A web page "
+                    "cannot set this header cross-origin, which is the point."
+                ),
+            },
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -271,7 +323,8 @@ async def health() -> dict[str, Any]:
 
 
 @app.post("/pull")
-async def pull() -> Any:
+async def pull(request: Request) -> Any:
+    await require_client(request)
     """
     Install the model, from the panel, with progress.
 
@@ -321,7 +374,8 @@ async def pull() -> Any:
 
 
 @app.post("/act")
-async def act(req: ActRequest) -> Any:
+async def act(req: ActRequest, request: Request) -> Any:
+    await require_client(request)
     injected = await _inject_fault()
     if injected is not None:
         return injected

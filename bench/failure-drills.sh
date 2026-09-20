@@ -181,12 +181,12 @@ if ! start_server "500"; then
   exit 0
 fi
 OUT=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:$PORT/act" \
-  -H 'content-type: application/json' -d '{"payload":{"root":{"id":"el_1","role":"other","box":{"x":0,"y":0,"w":1,"h":1},"visible":true,"enabled":true},"origin":"https://x.test","title":"t","capturedAt":0,"viewport":{"w":1,"h":1,"scrollX":0,"scrollY":0},"placeholders":[],"acknowledged":[],"goal":"g","history":[]}}')
+  -H 'content-type: application/json' -H 'x-aavaran-client: 1' -d '{"payload":{"root":{"id":"el_1","role":"other","box":{"x":0,"y":0,"w":1,"h":1},"visible":true,"enabled":true},"origin":"https://x.test","title":"t","capturedAt":0,"viewport":{"w":1,"h":1,"scrollX":0,"scrollY":0},"placeholders":[],"acknowledged":[],"goal":"g","history":[]}}')
 drill "server fault: returns a clean 500" "500" "$OUT"
 
 # 3. A 200 that is not JSON — a captive portal or misrouted proxy.
 start_server "garbage"
-OUT=$(curl -s -X POST "http://127.0.0.1:$PORT/act" -H 'content-type: application/json' \
+OUT=$(curl -s -X POST "http://127.0.0.1:$PORT/act" -H 'content-type: application/json' -H 'x-aavaran-client: 1' \
   -d '{"payload":{"root":{"id":"el_1","role":"other","box":{"x":0,"y":0,"w":1,"h":1},"visible":true,"enabled":true},"origin":"https://x.test","title":"t","capturedAt":0,"viewport":{"w":1,"h":1,"scrollX":0,"scrollY":0},"placeholders":[],"acknowledged":[],"goal":"g","history":[]}}')
 drill "non-JSON 200 is served (client must cope)" "not JSON" "$OUT"
 
@@ -206,20 +206,46 @@ fi
 
 # 5. The server's own tripwire refuses un-redacted PII.
 start_server ""
-OUT=$(curl -s -X POST "http://127.0.0.1:$PORT/act" -H 'content-type: application/json' \
+OUT=$(curl -s -X POST "http://127.0.0.1:$PORT/act" -H 'content-type: application/json' -H 'x-aavaran-client: 1' \
   -d '{"payload":{"root":{"id":"el_1","role":"textbox","value":"ABCPE1234F","box":{"x":0,"y":0,"w":1,"h":1},"visible":true,"enabled":true},"origin":"https://x.test","title":"t","capturedAt":0,"viewport":{"w":1,"h":1,"scrollX":0,"scrollY":0},"placeholders":[],"acknowledged":[],"goal":"g","history":[]}}')
 drill "server refuses an un-redacted PAN in the payload" "unredacted PII" "$OUT"
 
 # 6. And accepts it once the client has acknowledged the decision.
 #    This one reaches the MODEL, so it needs Ollama.
 if [ "$OLLAMA_UP" -eq 1 ]; then
-  OUT=$(curl -s -X POST "http://127.0.0.1:$PORT/act" -H 'content-type: application/json' \
+  OUT=$(curl -s -X POST "http://127.0.0.1:$PORT/act" -H 'content-type: application/json' -H 'x-aavaran-client: 1' \
     -d '{"payload":{"root":{"id":"el_1","role":"textbox","value":"ABCPE1234F","box":{"x":0,"y":0,"w":1,"h":1},"visible":true,"enabled":true},"origin":"https://x.test","title":"t","capturedAt":0,"viewport":{"w":1,"h":1,"scrollX":0,"scrollY":0},"placeholders":[],"acknowledged":[{"id":"el_1","kind":"PAN","reason":"drill"}],"goal":"g","history":[]}}' \
     --max-time 180)
   drill "acknowledged detection is accepted" "actions" "$OUT"
 else
   skip_drill "acknowledged detection is accepted"
 fi
+
+# 7. THE SERVER IS ON LOCALHOST, WHICH IS NOT THE SAME AS PRIVATE.
+#
+# Every page you visit can reach 127.0.0.1 from your browser. Two of these endpoints
+# change state on the machine — /pull starts a 6 GB download, /act occupies the GPU —
+# and a POST with no Content-Type is a SIMPLE request, so CORS never stops it being
+# executed, only stops the reply being read. The custom header is what closes that:
+# a page cannot add one cross-origin without a preflight, and the preflight has to
+# pass an origin check that only the extension passes.
+#
+# These three drills exist because the protection is invisible when it works, and the
+# way it breaks is someone widening allow_origins back to "*" to fix a CORS error.
+start_server ""
+OUT=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 -X POST "http://127.0.0.1:$PORT/pull")
+drill "POST /pull is refused without the client header" "403" "$OUT"
+
+OUT=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 -X POST "http://127.0.0.1:$PORT/act" \
+  -H 'content-type: application/json' -d '{"payload":{}}')
+drill "POST /act is refused without the client header" "403" "$OUT"
+
+# A web page's preflight must not be answered. 400 is what CORSMiddleware returns for
+# a disallowed origin; anything 2xx here means an arbitrary site may call this server.
+OUT=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 -X OPTIONS "http://127.0.0.1:$PORT/act" \
+  -H 'Origin: https://evil.test' -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type,x-aavaran-client')
+drill "a web page's preflight to /act is refused" "400" "$OUT"
 
 stop_server
 rm -f "$FAULT_FILE"
