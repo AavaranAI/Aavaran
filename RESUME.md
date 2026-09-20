@@ -103,6 +103,7 @@ straight rsync produced a **215 MB** archive.
 Narrative: `~/Documents/_SESSION-2026-09-19-aavaran-panel-ui.md`.
 ⛔ **Dirty tree:** `extension/src/panel/index.html`, `extension/src/panel/index.ts`,
 `scripts/panel-shot.mjs`. Suite 22/0, `tsc` green, 17 states render, a11y 0 failures.
+*(Counts as at 19 Sep. Current: fast **24**, `--full` **32**, 19 states — see the top.)*
 
 **Idle panel 892px → 652px at 400px wide.** Roughly 780px of it had been furniture
 standing between the user and anything worth reading.
@@ -467,7 +468,7 @@ fonts. Every failure was true about the page it looked at and meaningless about 
 nibbles mapped a–p), which is how Chrome derives it. **Do not identify a thing by being
 the first of its kind you happen to see.**
 
-**`./test-all.sh --full` = 30 passed, 0 skipped** (was 24 at its last full run before
+**`./test-all.sh --full` = 30 passed, 0 skipped at this point in the day** (was 24 at its last full run before
 today; the suite had grown to 29 unrun, and this adds the 30th).
 
 ### 📐 THE DESIGNERS' PACK WAS FIVE SCREENS SHORT (20 Sep)
