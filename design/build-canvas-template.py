@@ -35,23 +35,77 @@ MUTED = RGBColor(0x6E, 0x6E, 0x6E)
 UI = "Helvetica Neue"
 MONO = "Menlo"
 
+# ⛔ THE SCREEN LIST IS NOT WRITTEN HERE ANY MORE. IT IS READ FROM THE CODE.
+#
+# This list said 13 screens while the panel had reached 18, so the designers were
+# handed a canvas with five screens missing — including `14-needs-user-input`, a
+# whole interaction they would have had no way to know existed. Nobody edited this
+# file when a state was added, because nothing made them: two lists of the same
+# thing, maintained by hand, drift the first time anyone is in a hurry.
+#
+# `scripts/panel-shot.mjs` is the one place that must know every state, because it
+# renders them. So it is the source, and this is derived.
+#
+# Descriptions stay here — they are editorial, not structural — and a state with no
+# description is a HARD ERROR rather than a blank cell. That is what makes adding a
+# state impossible to do silently: the template build stops until someone says what
+# the new screen is for.
+#
 # Kept to one short line each: the second column is 328 px wide at 19 px, which
 # wraps at about 34 characters, and a wrap here ran into the row beneath it.
-STATES = [
-    ("0-launch-screen", "before the panel appears"),
-    ("1-idle-server-ready", "the first screen anyone sees"),
-    ("2-server-offline", "agent can't run; scan still can"),
-    ("3-scan-result", "the screen that proves it"),
-    ("4-run-complete", "result, then the full record"),
-    ("5-settings-open", "server address and controls"),
-    ("6-scan-ambiguous-field", "hidden, kind not named"),
-    ("7-server-unreachable-repo", "how to start the server"),
-    ("8-scan-only-package", "what the emailed zip shows"),
-    ("9-model-not-installed", "offers a 6 GB download"),
-    ("10-page-unreadable", "we refuse to call it clean"),
-    ("11-model-downloading", "a progress bar"),
-    ("12-scan-only-but-server-up", "scan-only, server answered"),
-]
+import re
+import sys
+
+BLURBS = {
+    "0-launch-screen": "before the panel appears",
+    "1-idle-server-ready": "the first screen anyone sees",
+    "2-server-offline": "agent can't run; scan still can",
+    "3-scan-result": "the screen that proves it",
+    "4-run-complete": "result, then the full record",
+    "5-settings-open": "server address and controls",
+    "6-scan-ambiguous-field": "hidden, kind not named",
+    "7-server-unreachable-repo": "how to start the server",
+    "8-scan-only-package": "what the emailed zip shows",
+    "9-model-not-installed": "offers a 6 GB download",
+    "10-page-unreadable": "we refuse to call it clean",
+    "11-model-downloading": "a progress bar",
+    "12-scan-only-but-server-up": "scan-only, server answered",
+    "13-server-version-stale": "server older than the extension",
+    "14-needs-user-input": "it asks you for one value",
+    "15-thread-resume": "you have been on this site before",
+    "16-thread-new": "a fresh site, no history",
+    "17-server-came-up": "it noticed the server start",
+}
+
+# States that exist to PROVE something, not to be designed. They still have to be named
+# here, so that leaving one out is a decision somebody made rather than one nobody
+# noticed — which is the whole failure this file was rewritten to stop.
+TEST_ONLY = {
+    # A hostile page aimed at the panel: every page-controlled string replaced with
+    # markup that tries to execute. There is nothing here to design; the screenshot is
+    # evidence that esc() held.
+    "18-hostile-page",
+}
+
+_shot = (OUT.parent / "scripts" / "panel-shot.mjs").read_text()
+_block = _shot[_shot.index("const STATES = ["):]
+_names = re.findall(r"\{\s*name:\s*'([^']+)'", _block)
+if not _names:
+    sys.exit("could not read the state list out of scripts/panel-shot.mjs")
+
+_names = [n for n in _names if n not in TEST_ONLY]
+_missing = [n for n in _names if n not in BLURBS]
+if _missing:
+    sys.exit(
+        "these panel states have no description in design/build-canvas-template.py:\n  "
+        + "\n  ".join(_missing)
+        + "\n\nAdd one line each. The designers get a page per screen, and a screen\n"
+        "nobody described is a screen nobody designs."
+    )
+
+# Sorted by the numeric prefix so the canvas reads 0,1,2… rather than in the order
+# the harness happens to render them (which is grouped by which stub it needs).
+STATES = [(n, BLURBS[n]) for n in sorted(_names, key=lambda s: int(s.split("-")[0]))]
 
 prs = Presentation()
 prs.slide_width, prs.slide_height = Emu(W * PX), Emu(H * PX)
@@ -125,12 +179,24 @@ text(s, INSET, y, W - 2 * INSET, 90,
      "page and put -cont after the name.", size=25, color=MUTED)
 y += 110
 
-text(s, INSET, y, W - 2 * INSET, 40, "The 13 screens, each on its own page", size=28, bold=True)
+text(s, INSET, y, W - 2 * INSET, 40, f"The {len(STATES)} screens, each on its own page", size=28, bold=True)
 y += 60
+
+# ⚠ THE PITCH IS COMPUTED, NOT TYPED. At 44 px a row, thirteen screens fitted and
+# eighteen did not: the list ran straight through the fixed footer at H-80 and
+# pushed the "sending it back" paragraph clean off the page. The index page is
+# generated from a list that grows, so its layout has to be a function of how long
+# that list is — a constant that happened to fit once is a layout waiting to break.
+FOOT_TOP = H - 80
+TAIL = 40 + 120 + 24          # the closing paragraph, plus air above the footer
+pitch = min(44, max(30, int((FOOT_TOP - TAIL - y) / max(len(STATES), 1))))
+name_pt = 22 if pitch >= 40 else 20
+what_pt = 19 if pitch >= 40 else 17
+
 for name, what in STATES:
-    text(s, INSET, y, 380, 34, name, size=22, font=MONO, color=TEXT)
-    text(s, INSET + 396, y + 2, W - INSET - 396 - INSET, 34, what, size=19, color=MUTED)
-    y += 44
+    text(s, INSET, y, 380, 34, name, size=name_pt, font=MONO, color=TEXT)
+    text(s, INSET + 396, y + 2, W - INSET - 396 - INSET, 34, what, size=what_pt, color=MUTED)
+    y += pitch
 
 y += 40
 text(s, INSET, y, W - 2 * INSET, 120,
@@ -138,7 +204,16 @@ text(s, INSET, y, W - 2 * INSET, 120,
      "Keep the page names as they are — that is how each design gets matched to "
      "the screen it belongs to.", size=24, color=MUTED)
 
-text(s, INSET, H - 80, W - 2 * INSET, 40,
+# The guard. A page that silently overflows is the failure this whole block exists
+# to stop, and the only way to know is to check the number before writing the file.
+if y + 120 > FOOT_TOP:
+    sys.exit(
+        f"the index page overflows: {len(STATES)} screens need {y + 120}px but the "
+        f"footer sits at {FOOT_TOP}px.\nSplit the list over two pages — do not just "
+        "shrink the type again."
+    )
+
+text(s, INSET, FOOT_TOP, W - 2 * INSET, 40,
      "If the import misbehaves, Canva → Custom size → 800 × 1800 px does the same job.",
      size=21, color=LABEL)
 

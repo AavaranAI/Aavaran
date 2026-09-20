@@ -20,7 +20,7 @@ Two small things that make it buildable:
   One screen per page. If a screen runs longer than the page, continue on a new
   page and add -cont to the name.
 
-  Keep the page names as they are. There are 13 screens and that is how each
+  Keep the page names as they are. There are 18 screens and that is how each
   design gets matched to the screen it belongs to. Page 1 lists them.
 
 The dashed grey lines on each page are just guides showing where the current
