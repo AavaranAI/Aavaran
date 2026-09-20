@@ -29,6 +29,400 @@ without it withholds no names at all and reports every page clean.
 carries 97 MB of onnxruntime and 28 MB of ONNX models that `setup.mjs` fetches, and a
 straight rsync produced a **215 MB** archive.
 
+### 🎨 THE PANEL UI AND A SETTINGS SCREEN (19 Sep, evening — UNCOMMITTED)
+
+Narrative: `~/Documents/_SESSION-2026-09-19-aavaran-panel-ui.md`.
+⛔ **Dirty tree:** `extension/src/panel/index.html`, `extension/src/panel/index.ts`,
+`scripts/panel-shot.mjs`. Suite 22/0, `tsc` green, 17 states render, a11y 0 failures.
+
+**Idle panel 892px → 652px at 400px wide.** Roughly 780px of it had been furniture
+standing between the user and anything worth reading.
+
+- **Settings is its own screen**, opened by a gear in the top bar. It is still a
+  `<details>` whose `<summary>` IS the gear, so it opens and closes **with no script
+  running** — same reasoning as the splash. Done and Escape are additions, never the only
+  exit. Titled groups with one sentence each, instead of loose pills.
+- **Target + thread bar are one context strip** (same question, asked about space and
+  about time). The card around the thread half is gone, and so is its **amber dot** — it
+  rendered in all three states so it distinguished nothing, and amber means WITHHELD.
+- **One standing claim, not two.** Examples lead; the long "What this does" moved into
+  Settings; the footer note shows only when there is something to count.
+
+#### ⛔ AND run-complete HAD BEEN RENDERING A STACK TRACE
+
+`4-run-complete` — the designers' reference for a finished run — was an error card and
+three stuck skeletons. **Verified pre-existing** by stashing the day's work and
+re-rendering. `missingFields()` walks `payload.root`; when the panel started computing
+outstanding fields from the payload, `RUN_NEEDS_INPUT` got a real `root` and **`RUN` was
+left on the old `nodes:` shape**, so the walk hit `undefined.visible` and the catch-all
+painted the exception over the whole results view.
+
+⇒ **The harness said `0 failures` throughout** — it asserts fonts and accessible names,
+neither of which has an opinion about whether the state rendered. **New guard: no state
+may render an error** (nothing stubs `error`, so any error in `#phase` is real).
+
+⇒ **The proof card had never appeared in ANY reference screenshot** — gated on
+`res.tabId`, which no fixture carried. Both run fixtures now have one.
+`4-run-complete`: 709px of error → **1618px of real results, proof card leading.**
+
+⚠⚠ **A CLOSED `<details>` STILL GIVES A `position:fixed` CHILD A FULL-SIZE BOX.** Chrome
+hides closed content with content-visibility, so `getClientRects()`/`getBoundingClientRect()`
+answer "visible" in both states — my open check passed for the wrong reason.
+**`checkVisibility({checkVisibilityCSS, contentVisibilityAuto})` is the only probe that
+can tell.** ⚠ And a toggle test must set its own starting state: mine ran after the state
+that leaves the sheet open, so its first click closed it.
+
+#### ⛔ THE START-THE-SERVER COMMANDS NEVER WENT AWAY (his report)
+
+Two faults, and the missing poll was the smaller one.
+
+1. **`checkServer`'s success branch never hid the advice box.** The only line that hid it
+   was inside the model-download path — so even pressing **Test** against a running
+   server left *"The reasoning server is not running"* plus both commands on screen,
+   under a green lamp reading **ready**. The panel asserted both halves of a
+   contradiction at once.
+2. **Nothing ever re-probed.** On open and on Test, and that was the whole list — so the
+   one path the advice itself sends you down was the path the panel could not see the
+   end of.
+
+**Confirmed live:** while that card was on his screen, `127.0.0.1:8975/health` answered
+`{"ok":true,…,"version":"0.3.0"}`. It had been up the whole time.
+
+Fixed: hidden whenever the server answers — **kept only for the stale-version note**,
+which is a live fact about a server that IS up — and while unreachable the panel
+**watches for it**, a silent 3s probe of the same localhost endpoint, so *"the only
+outbound request goes to 127.0.0.1"* stays true. ⚠ Silent deliberately: routing it
+through `checkServer` would flick the lamp to "checking…" every 3 seconds.
+
+⚠⚠ **`visibilitychange` DOES NOT catch this.** Switching to Terminal and back does not
+hide the document — visibility is about the tab being occluded, not about which
+application has focus. The poll does the work; the listener only stops the timer.
+
+New state **`17-server-came-up`**: health flips to OK 2s after the first probe and
+**nothing touches the panel**. Both halves sabotage-verified separately.
+
+⚠ **Jinshri and Vansh are redesigning this panel from scratch** — this is a pass over the
+current one and may be superseded. Decide whether these renders become their baseline.
+
+### 🎬 THE 5th PASS — MEASURED off the recording, not remembered (20 Sep)
+
+His note: *"I want the UI to look more like MetaMask, and I did share you the recording as
+well, but you didn't exactly implement everything there."* **He was right, and the reason
+is instructive: passes 1–4 worked from the WRITTEN RULES in this file, which are a summary
+of the recording. Nobody had gone back to the file and measured anything.**
+
+Recording: `~/screen-captures/Recordings/Screen Recording 2026-09-18 at 11.04.48␣AM.mov`
+(⚠ that space is U+202F — **glob it, never paste the path**; and it is in `Recordings/`,
+which is right, contrary to a note I made mid-session). Frames pulled with ffmpeg, the
+side panel cropped at native 2x, colours sampled with PIL and corners measured in pixels.
+
+⭐⭐ **IT IS THE SAME SURFACE WE ARE BUILDING.** MetaMask in that recording is running in
+the **Chrome side panel**, at our width — so it is a like-for-like reference, not an
+analogy to a popup.
+
+**What measuring found that four passes of looking had not:**
+
+| | was | measured | now |
+|---|---|---|---|
+| **button shape** | `999px` stadium pill | **280×48 with a 10px corner** | `--r-btn:10px` |
+| action tile | — | 72×68, same 10px corner | `--r-tile:10px` |
+| panel background | `#0a0a0a`, commented *"matched to the recording, not pure #000"* | **`(0,0,0)` everywhere** | `#000` |
+| menu surface | — | `#141414` (a RAISED layer) | `--sheet` |
+| row hover | `#141414` | `#1c1c1e` | `--row` |
+| divider | `#232323` | `#1a1a1a` | `--edge` |
+
+⇒ **THE SHAPE WAS THE BIGGEST TELL AND IT IS THE ONE NOBODY CHECKED.** Every button and
+input in this panel was a stadium pill; MetaMask uses a pill only for small filter chips.
+**A pill is a chip — using it for every control is what makes an interface read as a
+landing page rather than an instrument.** Three passes of colour work could not have found
+this, because a corner radius is not something you notice, it is something you measure.
+
+⇒ **A written rule is a LOSSY COMPRESSION of the artefact it came from.** The rules in
+this file were all true and none of them mentioned radius, fill, or that the reference was
+a side panel. Go back to the source.
+
+**Also implemented from the recording, all of it previously missing:**
+
+- **Secondary controls are FILLED, not outlined** — its Buy/Swap/Send/Receive tiles carry
+  no border at all. Scan, the demoted Run, the thread buttons and Copy were all outlined
+  ghosts, which is a web-page idiom.
+- **A section header is grey, plain, sentence case** ("Manage", "Help and settings") — ours
+  was white, semibold and carried an icon, so a label for three example rows shouted as
+  loudly as the product's own name in the bar above it.
+- **A sub-screen is: back chevron top-left, CENTRED title, full-bleed rows with a leading
+  icon and a trailing chevron**, grouped under grey headers with **inset** hairlines. The
+  settings screen was a left title, a "Done" pill and bordered groups of prose — an iOS
+  sheet, not this.
+- **A destructive action is a COLOURED ROW in the list**, like its red *Lock*. "Delete all
+  conversations" is now a coral row with a trash icon, not a bordered button beside the list.
+- **Rows carry a leading icon.** The old note here banned the leading *circle* — right, an
+  empty avatar ring is decoration — but then over-corrected to no leading mark at all.
+  Every row MetaMask draws has something in that column; the menu rows use a plain line
+  icon. Ours now use one that says what the row does.
+- **Rows do not scale on press**, they answer with a wash. `.ex` and the settings rows left
+  the press-animation list: scaling a full-bleed row pulls it off both walls of the panel.
+
+⚠ `#threadcount` moved into a `<span>` inside a row, and `.ex` gained an icon — the example
+click now reads the **label span**, not the row's `textContent`. That still happened to
+work (an `<svg>` contributes no text) but it was true by accident.
+
+### 🛡 HARDENING PASS — TYPE BACKLOG 13 → 0, AND THE GATE NOW COVERS EVERYTHING
+
+`scripts/typecheck.sh` gated on five codes and carried a documented backlog of 13 errors,
+on the rule that *"a gate that starts red is a gate somebody disables"*. **The backlog is
+now zero and the gate is simply: any type error fails.** Sabotage-verified.
+
+What the backlog was hiding — none of it was style:
+
+- ⭐⭐ **`strictNullChecks` was OFF, and with it off `if (!asked.ok)` DOES NOT NARROW a
+  discriminated union.** Proven on a six-line repro rather than assumed. So **every
+  `{ok:true}|{ok:false}` failure branch in this codebase was unchecked**, including the
+  orchestrator's model-failure path, which reads `.reason` and `.detail` off a union tsc
+  could not confirm had either. Turning it on **removed six errors and added none of
+  consequence** — and changes no emitted byte, because esbuild never type-checks.
+- **`as never as Record<string, never>`** on the vision reply — a double cast through
+  `never`, the strongest possible instruction to stop looking. The crop-labelling loop
+  could not be checked at all: a renamed field in the offscreen handler would have
+  compiled and produced silently unlabelled crops.
+- **Two `const results = []` arrays inferring `never[]`** — nothing can be pushed into
+  one. They compiled only because strictNullChecks was off and they fell back to `any[]`.
+  Next to one of them, a cast declaring a crop's box as `box: never`.
+- ⚠ **Untyped `chrome.runtime` message fields flowing into `fetch()` and canvas
+  arithmetic.** `(msg.maxWidth ?? 1024) / bmp.width` defends only against `undefined`;
+  anything else a sender put there produced **NaN → a 0-width canvas → a BLANK
+  screenshot**, which the vision stage would describe without ever reporting an error.
+  Now read as numbers once, at the boundary.
+- **`NON_PII` compared against a type that excludes it** — the deliberate belt-and-braces
+  guard survived only via a cast. Replaced with a real type predicate (`isPiiKind`), so
+  the runtime check stays and the cast goes. ⇒ **A cast is how a wrong type survives
+  contact with the compiler.**
+- `process` referenced in a CONTENT SCRIPT. The `typeof` guard was already correct; it
+  now has a local ambient declaration rather than pulling @types/node into a browser
+  bundle.
+
+### 🔒 THE SERVER WAS REACHABLE BY EVERY PAGE YOU VISIT
+
+`allow_origins=["*"]`, under a comment reading *"the client is a browser extension, so
+its origin is chrome-extension://<id>"* — it described the right answer and then allowed
+the opposite. **Listening on 127.0.0.1 is not the same as private: every page you visit
+can reach 127.0.0.1 from your browser.**
+
+**Two holes, and CORS only closes one:**
+
+1. **Reading the replies.** A cross-origin JSON POST is preflighted, so a narrowed origin
+   does stop an arbitrary site calling `/act` and reading the answer — and `/health`,
+   which names the model, the version and **every model installed on the machine**.
+2. ⛔ **Causing the side effect.** A POST with no Content-Type is a **simple request**:
+   no preflight, sent and executed whatever CORS says, with only the reply withheld.
+   **`POST /pull` takes no body — so any page you were merely visiting could start a
+   6 GB download on your machine**, and `/act` could be made to occupy the GPU. **CORS
+   cannot help with this at all.**
+
+Fixed both: the origin is narrowed to
+`^(chrome|moz|safari-web)-extension://[A-Za-z0-9-]+$`, and the two state-changing
+endpoints require an `x-aavaran-client` header. ⚠ **That header is not a secret and is
+not authentication** — anything running locally as you can send it. It closes the one
+threat a browser-hosted attacker has: **a page cannot add a header to a cross-origin
+request without a preflight, and the preflight is what the narrowed origin now refuses.**
+Node callers send no `Origin` at all, so CORS never applied to them; they send the header,
+so it is one check for both.
+
+Verified live: `POST /pull` without the header **403**, with it **200**; a preflight from
+`https://evil.test` **400**, from a `chrome-extension://` origin **200**. Callers updated:
+orchestrator, panel, `bench/agent-loop.ts`, `bench/injection-test.ts` and four curls in
+`failure-drills.sh`.
+
+**Three new drills** cover it, because the protection is invisible when it works and the
+way it breaks is somebody widening `allow_origins` back to `*` to fix a CORS error.
+Sabotage-verified: doing exactly that fails *"a web page's preflight to /act is refused"*.
+
+### 🔐 `markup-invariants.test.ts` — the properties that make `esc()` ENOUGH
+
+`18-hostile-page` proves the code **as written** is safe. This proves the **next edit**
+cannot quietly make it unsafe in a way that fixture happens not to cover:
+
+- `esc()` still handles `& < > "`.
+- ⭐ **No single-quoted HTML attribute carries an interpolation.** This is the invisible
+  one: `esc()` deliberately does **not** escape an apostrophe, so `class='${x}'` is
+  injectable while `class="${x}"` is not. Every attribute in the panel is double-quoted
+  today, and nothing was stopping the next one being written the other way.
+- No sink that can execute a string: `document.write`, `eval`, `new Function`, `srcdoc`,
+  `javascript:`.
+- No inline `on*` handler is ever authored — which is what lets `18-hostile-page` treat
+  **any** `on*` attribute as an attack. **The two checks hold each other up.**
+
+⚠ **The first run failed on correct code, and the RULE was wrong.** `insertAdjacentHTML`
+was on the banned list; it parses markup exactly as `innerHTML` does, neither executes an
+inserted `<script>`, and the panel uses `innerHTML` 33 times as its ordinary idiom. ⇒ **A
+rule that bans one and blesses the other is a preference, not a security property — and a
+test full of preferences is one people learn to edit rather than obey.** The list is now
+sinks that execute a string.
+
+### ⌨ THE SETTINGS SHEET HID THE PANEL FROM THE EYE AND FROM NOTHING ELSE
+
+A `position:fixed` overlay covers pixels and does not touch the tab order, so **Tab
+walked straight into Run, Scan and the goal box underneath the open settings screen** —
+focus on a control the user cannot see, and the next Enter starts an agent run from what
+looks like a settings screen.
+
+The panel behind the sheet is now `inert`, which is the one thing that removes a subtree
+from focus, hit-testing **and** the accessibility tree together; a `tabindex="-1"` sweep
+would have fixed Tab and still announced the whole hidden panel to a screen reader.
+Additive, like the Done button — the sheet still opens and closes on `<details>` alone.
+
+⚠ **The new assertion caught itself first.** `<details>` fires `toggle` on a task of its
+own, so reading `.inert` on the line after `open = false` reported that the panel "stayed
+inert after the sheet closed" — **the check was measuring its own timing, not the
+panel's behaviour.** Made async. ⇒ Second time today an assertion of mine was wrong
+rather than the code; both times the giveaway was that it failed on something I had just
+watched work.
+
+### 📋 COPY HAD NO FAILURE PATH — on the control the handover depends on
+
+`navigator.clipboard.writeText(...)` with no `.catch`. Those are the commands that start
+the reasoning server, and Copy is how Ma'am and the judges get them into a terminal.
+`writeText` rejects for reasons that have nothing to do with us — the document not
+focused, a denied permission — and the rejection was unhandled: **the label never
+changed, nothing reached the clipboard, and they paste an empty buffer into a terminal
+with no idea anything failed.** The failure path now SELECTS the command, so ⌘C still
+works, and says so on the button.
+
+### 🧪 A TEST FILE ADDED TO THE TREE WAS NOT BEING RUN
+
+`test-all.sh` held a **hand-typed list of ten unit-test paths**. `dead-css.test.ts` was
+written, passed on its own and sabotage-verified — and did not appear in the suite at all.
+⇒ **A test nobody runs is worse than no test: it is a green tick over something that was
+never checked.** Same failure as the designers' screen list, the same day. The suite now
+**discovers** them (`find`, not `**`, which needs globstar) and fails loudly if it finds
+none — because "no tests found" and "no tests" must not look alike.
+
+### 🧹 DEAD CSS — `dead-css.test.ts`
+
+Three selectors nothing could ever match: `.mono` (a font utility no element carried,
+plus a `#serverstatus .mono` rule for a model name rendered as plain text), `.pad`, and
+`.srow-val` — added the same afternoon and never used. ⇒ **A dead selector reads as
+evidence that the element it names is still in the panel**, and the next person designs
+around a thing that is not there. 92 class selectors now all have a producer.
+
+⚠ **Deliberately STATIC, not live-DOM.** `.proof.bad` is perfectly reachable — it is the
+card shown when the audit finds a **leak** — and no fixture renders it, so a live check
+would call the most important state in the product dead and be confidently wrong.
+
+### 🧨 A HOSTILE PAGE AIMED AT THE PANEL — `18-hostile-page`
+
+`bench/injection-test.ts` covers a hostile page steering the **model**. Nothing covered a
+hostile page steering the **panel**, which builds its DOM with `innerHTML` out of strings
+the page controls: the title, field labels, element ids, the model's reasoning about them,
+and the refusal text quoting them back.
+
+The fixture replaces every page-controlled string with markup that breaks out of element
+content, a double-quoted attribute and a **single-quoted** one — the last because `esc()`
+does not escape an apostrophe and is only safe while every attribute in the panel is
+double-quoted. The panel scans, then runs, so both render paths build DOM from it.
+
+⭐ **It traps `alert` and checks for EXECUTION, not just presence** — an injected
+`<img onerror>` fires the instant it is parsed, even if the node is replaced a moment
+later, so a check that only inspected the final DOM could miss a payload that had already
+run. It also asserts the hostile text **is on screen as text**, or the state would pass
+just as well by silently dropping the fields and prove nothing.
+
+**Result: clean — and sabotage-verified.** Removing a single `esc()` from one field label
+reports *"AN INJECTED HANDLER EXECUTED inside the panel"*.
+
+⚠ It is listed in `design/build-canvas-template.py`'s **`TEST_ONLY`** set, so the designers
+do not get a page for a test fixture — and the missing-description guard still caught it
+within the hour of being written, which is the guard working in the wild.
+
+### 🔍 LOOKING AT ALL 18 STATES FOUND FOUR MORE DEFECTS (20 Sep)
+
+None of them were in the detector, all of them were on screen, and the suite was green
+through every one. **Reading the reference renders one by one is the only thing that found
+them.**
+
+1. **`1 element were readable`** — the scan card on an unreadable page. The noun was
+   pluralised and the verb **"were" was hardcoded**, and the commonest case of that screen
+   is a frame-only page yielding exactly one node. ⇒ Grammar on the card that argues we are
+   being careful is not a small thing. Fixed to `was`/`were`.
+2. **A heavy white bar floating before "this page could not be read".** `.fig` is Archivo
+   Black at 20px and exists to set the NUMBER in "**4** values would be withheld"; the
+   unreadable branches had no number, so they put an **em dash** in it. ⇒ **No `.fig` when
+   there is no figure** — decoration standing exactly where this panel puts information.
+3. **`4 VALUES NEEDED`** — see below, rule 1.
+4. ⚠ **`11-model-downloading` was not a download.** The harness stubs `/health` and
+   `build-info.json` only, so pressing Install sent a **real `POST /pull` to whatever ollama
+   was doing on this machine** — with the model already present it returned at once and the
+   reference screenshot was the *"download finished, but the server still does not see the
+   model"* FAILURE screen. ⇒ **A reference screenshot that depends on the developer's
+   machine is not a reference.** `/pull` now streams a fixed NDJSON, so the shot shows a
+   real 45% / 2.70 of 6.00 GB bar on any machine — and it proves the per-digest
+   accumulation, which is the thing that bar gets wrong.
+
+### ⛔ RULE 1 WAS BEING BROKEN BY THE FILE THAT STATES IT (20 Sep)
+
+`14-needs-user-input` rendered **`4 VALUES NEEDED`** at **9.5px / .14em uppercase** —
+directly above the form a judge is asked to fill in. That is rule 1 at the top of
+`index.html`, *"the single loudest tell that an interface was generated rather than
+designed"*, violated inside the stylesheet that bans it.
+
+**The text was always sentence case** (`${plural(n,'value')} needed`); the CSS was doing
+the shouting. It arrived with the ask card on 19 Sep, after the ban was written, and
+survived four design passes and every green suite.
+
+⇒ **NOTHING CHECKS A RULE THAT LIVES IN A COMMENT.** `panel-shot.mjs` now walks every
+element of **every state** and fails on any uppercase run under 12px with tracking over
+5% — the wordmark exempt, because a logotype is the one place uppercase is the point.
+Sabotage-verified: restoring the old rule reports
+`14-needs-user-input: uppercase micro-label (rule 1) — H2. "4 values needed"`.
+
+### 🔬 NEW: `scripts/panel-shot-live.mjs` — the panel as a REAL extension page
+
+`panel-shot.mjs` serves the panel over http with `chrome.*` and `fetch` stubbed. That is
+the right trade for rendering eighteen states deterministically, and it is **blind to three
+things only the real thing has**: the `chrome-extension://` origin and MV3's CSP, the real
+`chrome.*` API, and a live service worker. **The `getManifest` shape bug lived in exactly
+that gap** and took the whole status readout down with it.
+
+This loads the unpacked extension into a fresh profile and opens the panel's own URL, then
+asserts on the live DOM: all three fonts reached `status:'loaded'` **under
+`chrome-extension://`**, the top bar and settings sheet exist, the launch screen handed
+over, and nothing painted an exception. Verified against the real server — the lamp read
+**ready** and the origin refusal rendered correctly, because the panel was looking at
+itself. **Sabotage-verified both ways: renaming a `@font-face` gives exit 1, restoring
+gives exit 0.** Wired into `--full`.
+
+⛔ **Its first version took the first `chrome-extension://` target it found — and Chrome
+ships component extensions of its own.** It picked one of those, navigated to a page that
+does not exist inside it, and reported "the panel did not render" with three missing
+fonts. Every failure was true about the page it looked at and meaningless about ours.
+⇒ The id is now **derived** from the extension's absolute path (sha256, first 16 bytes,
+nibbles mapped a–p), which is how Chrome derives it. **Do not identify a thing by being
+the first of its kind you happen to see.**
+
+**`./test-all.sh --full` = 30 passed, 0 skipped** (was 24 at its last full run before
+today; the suite had grown to 29 unrun, and this adds the 30th).
+
+### 📐 THE DESIGNERS' PACK WAS FIVE SCREENS SHORT (20 Sep)
+
+`design/build-canvas-template.py` carried its own hand-typed list of **13** screens while
+the panel had reached **18** — so the canvas Jinshri and Vansh were to be sent was missing
+five, including **`14-needs-user-input`, an entire interaction they had no way to know
+existed.** Nobody updated it when a state was added, because nothing made them.
+
+⇒ **Two hand-kept copies of the same list drift the first time anyone is in a hurry.**
+The template now **reads the state names out of `scripts/panel-shot.mjs`** — the one file
+that must know all of them, because it renders them — and **refuses to build** when a state
+has no description. Both guards sabotage-verified.
+
+⚠ **And the moment the list grew, the index page broke.** 18 rows at a typed 44px pitch ran
+straight through the footer pinned at `H-80` and pushed the closing paragraph off the page.
+Caught by **looking at the rendered PDF**, not by the build, which reported 21 pages
+cheerfully. The row pitch is now computed from the space available and there is a hard
+overflow guard. ⇒ **A constant that happened to fit once is a layout waiting to break.**
+
+Regenerated: `Aavaran-Canva-Template.pptx` + `.pdf` (21 pages), all **18** reference PNGs in
+`design/reference/`, `CANVA-BRIEF.md` and `message-to-designers.txt`. **The pack is ready to
+send.**
+
 ### ⏭ THE FIRST THING TO DO NEXT SESSION
 
 **Re-run the pizza form end to end in the browser** — `httpbin.org/forms/post`, goal
