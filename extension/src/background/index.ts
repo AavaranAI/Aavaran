@@ -17,7 +17,10 @@ const DEFAULT_SERVER_URL = 'http://127.0.0.1:8975';
 async function serverUrl(): Promise<string> {
   try {
     const { serverUrl: u } = await chrome.storage.local.get('serverUrl');
-    return u || DEFAULT_SERVER_URL;
+    // Checked, not coerced. `u || DEFAULT` returns whatever non-empty value storage
+    // happens to hold, and storage is not typed — a number or an object there would
+    // have been handed to fetch() as a URL.
+    return typeof u === 'string' && u ? u : DEFAULT_SERVER_URL;
   } catch {
     return DEFAULT_SERVER_URL;
   }
@@ -540,7 +543,12 @@ async function runSpikeI(liveUrl: string): Promise<Record<string, unknown>> {
     };
     chrome.tabs.onUpdated.addListener(l);
     // The event may already have fired before this listener existed.
-    void chrome.tabs.get(tabId).then((t) => { if (t.status === 'complete') finish(true); });
+    // Swallowed deliberately: the tab can be gone by the time this resolves, and an
+    // unhandled rejection in a service worker is noise in a log nobody reads. The
+    // 45s timeout below is the real answer to 'it never loaded'.
+    void chrome.tabs.get(tabId)
+      .then((t) => { if (t.status === 'complete') finish(true); })
+      .catch(() => {});
     setTimeout(() => finish(false), 45000);
   });
   out.loadedCleanly = loadedCleanly;

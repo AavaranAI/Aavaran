@@ -18,6 +18,22 @@
 import type {
   BoundingBox, ElementId, ElementNode, ElementRole, PageStructure,
 } from '../contracts.ts';
+
+/**
+ * `process`, declared rather than imported.
+ *
+ * This file is a CONTENT SCRIPT — it runs in the page, where `process` does not exist.
+ * One debug branch below is guarded with `typeof process !== 'undefined'`, which is the
+ * only safe test (optional chaining still evaluates the base, so `process?.env` throws
+ * a ReferenceError on an undeclared identifier — that is a bug this file already had).
+ *
+ * The guard was right and tsc could not see it, because `types` is deliberately
+ * `["chrome"]` and pulling in @types/node to satisfy one debug line would tell every
+ * other file in a browser-only bundle that Node's globals are available. A local
+ * ambient declaration says exactly what is true: the name may or may not exist, and
+ * the code must check before touching it.
+ */
+declare const process: { env?: Record<string, string | undefined> } | undefined;
 import { classifyField, type FieldSignals } from '../pii/dom.ts';
 import { scanText } from '../pii/patterns.ts';
 

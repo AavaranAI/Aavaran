@@ -1,18 +1,31 @@
 {
   "//": "Type-checking ONLY. esbuild does the emitting and strips types WITHOUT checking them, which is how `ensureOffscreen is not defined` reached a live page: the orchestrator called an identifier it never imported, and nothing in the build or the suite could notice. `npm run typecheck` is wired into test-all.sh.",
+  "//strictNullChecks": "ON since 20 Sep, and it REMOVED errors rather than adding them. With it off, `if (!asked.ok)` does NOT narrow a discriminated union \u2014 proven on a six-line repro \u2014 so every `{ ok: true } | { ok: false }` failure branch in this codebase was UNCHECKED, and the orchestrator's model-failure path read `.reason` and `.detail` off a union that tsc could not confirm had either. Turning it on fixed six errors and surfaced two real ones: a `never[]` inferred from an untyped `[]` that nothing could ever be pushed into. esbuild does not type-check, so this changes no emitted byte \u2014 only how much the compiler is allowed to notice.",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["chrome"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "chrome"
+    ],
     "strict": false,
+    "strictNullChecks": true,
     "noEmit": true,
     "skipLibCheck": true,
     "noUnusedLocals": false,
     "allowJs": false
   },
-  "include": ["extension/src/**/*.ts"],
-  "exclude": ["**/*.test.ts", "node_modules"]
+  "include": [
+    "extension/src/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "node_modules"
+  ]
 }

@@ -16,7 +16,7 @@
  */
 
 import { extractPage, signalsFor, resolveElement } from './extractor.ts';
-import { executeAction } from './execute.ts';
+import { executeAction, type ExecutionResult } from './execute.ts';
 import { sanitize } from '../redact/sanitize.ts';
 import { Vault } from '../redact/vault.ts';
 import { loadGazetteer } from '../pii/names.ts';
@@ -155,9 +155,12 @@ function observe(msg: { goal?: string; history?: unknown[] }, sendResponse: (r: 
 
     const t1 = performance.now();
     const { payload, withheld, orgContacts, piiBoxes } = sanitize(result.structure, {
-      goal: msg.goal ?? '',
+      goal: typeof msg.goal === 'string' ? msg.goal : '',
       vault,
-      history: msg.history ?? [],
+      // A message field is whatever the sender put there. Checking it is an array is
+      // not ceremony: `history` drives the no-op refusal rule, and a non-array here
+      // would throw inside sanitize with the page half-read.
+      history: Array.isArray(msg.history) ? (msg.history as AgentAction[]) : [],
       signals: (id) => {
         const el = resolveElement(id);
         return el ? signalsFor(el) : undefined;
@@ -261,8 +264,22 @@ function handleOther(msg: { type?: string; [k: string]: unknown },
   if (msg.type === 'downscale') {
     (async () => {
       const t0 = performance.now();
-      const bmp = await createImageBitmap(await (await fetch(msg.dataUrl)).blob());
-      const scale = Math.min(1, (msg.maxWidth ?? 1024) / bmp.width);
+      /**
+       * Read the message's numbers as numbers, once, at the boundary.
+       *
+       * `(msg.maxWidth ?? 1024) / bmp.width` only defends against undefined. Anything
+       * else a sender put there — a string, null, an object — produced NaN, and NaN
+       * flowed straight into canvas.width, which silently clamps to 0 and returns a
+       * blank frame. A blank frame is the worst possible screenshot for this product:
+       * the vision stage would describe nothing and report no error.
+       */
+      const srcUrl = typeof msg.dataUrl === 'string' ? msg.dataUrl : '';
+      const maxWidth = typeof msg.maxWidth === 'number' && msg.maxWidth > 0
+        ? msg.maxWidth : 1024;
+      const quality = typeof msg.quality === 'number' ? msg.quality : 0.8;
+
+      const bmp = await createImageBitmap(await (await fetch(srcUrl)).blob());
+      const scale = Math.min(1, maxWidth / bmp.width);
       const w = Math.round(bmp.width * scale);
       const h = Math.round(bmp.height * scale);
 
@@ -271,7 +288,7 @@ function handleOther(msg: { type?: string; [k: string]: unknown },
       canvas.getContext('2d')!.drawImage(bmp, 0, 0, w, h);
       bmp.close();
 
-      const dataUrl = canvas.toDataURL('image/jpeg', msg.quality ?? 0.8);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
       return { dataUrl, width: w, height: h, bytes: dataUrl.length,
                ms: Math.round(performance.now() - t0) };
     })().then(sendResponse).catch((e) => sendResponse({ error: String(e) }));
@@ -280,7 +297,8 @@ function handleOther(msg: { type?: string; [k: string]: unknown },
 
   if (msg.type === 'execute') {
     (async () => {
-      const results = [];
+      // Typed, not inferred: an untyped [] is never[] and refuses every push.
+      const results: ExecutionResult[] = [];
       for (const action of msg.actions as AgentAction[]) {
         // Token resolution is bound here, so the vault reference never leaves this file.
         const r = await executeAction(action, (t) => vault.resolve(t));

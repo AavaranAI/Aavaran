@@ -9,6 +9,28 @@
 # agent — now blind — looped on "wait, form loading" until it hit the turn limit. On a
 # live page, in front of him.
 #
+# ⭐ WIDENED AGAIN 20 Sep — TO EVERYTHING. The backlog is ZERO.
+#
+# This file's own rule for adding a code was: it must describe something that
+# misbehaves at runtime, and it must currently have zero instances, because a gate
+# that starts red is a gate somebody disables. All 13 backlog errors were fixed, so
+# every code now satisfies that rule and the gate is simply `any error fails`.
+#
+# What the backlog was hiding, found by clearing it:
+#   - `strictNullChecks` was OFF, and with it off `if (!asked.ok)` does NOT narrow a
+#     discriminated union (proven on a six-line repro). Every ok/failure branch in the
+#     codebase was unchecked, including the orchestrator's model-failure path, which
+#     read `.reason` and `.detail` off a union tsc could not confirm had either.
+#     Turning it on REMOVED six errors and added none of consequence.
+#   - `as never as Record<string, never>` on the vision reply — a double cast through
+#     `never`, the strongest way to tell the compiler to stop looking. The crop-labelling
+#     loop could not be checked at all.
+#   - Two `const results = []` arrays inferring `never[]`, which nothing can be pushed
+#     into, compiling only because strictNullChecks was off and they fell back to any[].
+#   - Untyped `chrome.runtime` message fields flowing into `fetch()` and into canvas
+#     arithmetic, where anything non-numeric produced NaN -> a 0-width canvas -> a BLANK
+#     screenshot, described by the vision stage without error.
+#
 # WIDENED 19 Sep to a SET of codes, all of which are "wrong at runtime" rather than
 # "untidy". The new one earned its place the same day the gate proved too narrow:
 #
@@ -30,7 +52,7 @@
 # mean either a large risky refactor or a disabled check. A narrow gate that always
 # runs beats a broad one that gets switched off.
 #
-# ⚠ The remaining errors are NOT fixed. `--all` prints them; treat it as a backlog.
+# ⚠ `--all` still prints the full tsc output; it should now be empty.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -43,17 +65,17 @@ if [ "${1:-}" = "--all" ]; then
   exit 0
 fi
 
-GATED='TS2304|TS2552|TS1117|TS2448|TS2454'
-BROKEN=$(printf '%s\n' "$OUT" | grep -E "error (${GATED})" || true)
+BROKEN=$(printf '%s\n' "$OUT" | grep -E 'error TS' || true)
 if [ -n "$BROKEN" ]; then
   echo "$BROKEN"
   echo
-  echo "✘ these are not style — they misbehave at runtime:"
-  echo "   TS2304/TS2552  undefined identifier      -> ReferenceError"
-  echo "   TS1117         duplicate property        -> silently overwritten"
-  echo "   TS2448/TS2454  used before assigned      -> undefined at the wrong moment"
+  echo "✘ the type backlog is zero and must stay zero."
+  echo "   Every one of these compiled fine yesterday and still would — esbuild strips"
+  echo "   types without checking them. tsc is the only thing that reads them."
+  echo
+  echo "   If an error is genuinely not worth fixing, say so IN THE CODE with a narrow"
+  echo "   guard or an explicit type, not by widening this gate back out."
   exit 1
 fi
 
-TOTAL=$(printf '%s\n' "$OUT" | grep -c 'error TS' || true)
-echo "no runtime-breaking type errors (${TOTAL} other type error(s) known, see --all)"
+echo "tsc clean — 0 type errors"

@@ -42,6 +42,21 @@ export interface FieldSignals {
   linkHref?: string;
 }
 
+/**
+ * NON_PII is a CLASSIFICATION, never a kind — as a type guard rather than a comparison.
+ *
+ * Call sites used to write `hint.kind !== 'NON_PII'` and then `hint.kind as PiiKind`.
+ * Where an enclosing condition had already narrowed, tsc reported the repeat as a
+ * comparison with no overlap, and the CAST is what kept it compiling — a cast being
+ * precisely the construct that lets a wrong type survive contact with the compiler.
+ *
+ * This takes the WIDE type, so it is legal to call even after narrowing, and returns a
+ * predicate, so the cast is unnecessary. The deliberate belt-and-braces check survives
+ * at runtime — which was the whole point of it — without costing a type error that
+ * teaches everyone to ignore type errors.
+ */
+export const isPiiKind = (k: PiiKind | 'NON_PII'): k is PiiKind => k !== 'NON_PII';
+
 export interface FieldHint {
   kind: PiiKind | 'NON_PII';
   confidence: number;

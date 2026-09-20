@@ -16,7 +16,8 @@ import type {
   Placeholder, SanitizedNode, SanitizedPayload,
 } from '../contracts.ts';
 import {
-  classifyField, reconcile, canBe, isOrgContact, REDACT_THRESHOLD, type FieldSignals,
+  classifyField, reconcile, canBe, isOrgContact, isPiiKind, REDACT_THRESHOLD,
+  type FieldSignals,
 } from '../pii/dom.ts';
 import { scanText } from '../pii/patterns.ts';
 import { detectNames, gazetteerLoaded } from '../pii/names.ts';
@@ -203,8 +204,7 @@ function redactValue(
        * reported it clean. Belt and braces, because the cost of being wrong here is a
        * silent one.
        */
-      const hinted = hint && hint.kind !== 'NON_PII'
-        ? (hint.kind as PiiKind) : undefined;
+      const hinted = hint && isPiiKind(hint.kind) ? hint.kind : undefined;
       const kind: PiiKind = hinted && canBe(hinted, det.raw) ? hinted : 'SENSITIVE';
       spans.push({ start: det.start, end: det.end, kind });
       placeholders.push({

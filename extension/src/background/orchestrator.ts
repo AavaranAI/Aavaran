@@ -10,6 +10,7 @@
  */
 
 import type { AgentAction, ElementId, SanitizedNode, SanitizedPayload } from '../contracts.ts';
+import type { CropResult } from '../vision/classify.ts';
 import { validateActions } from '../agent/validate.ts';
 import { callVision, ensureOffscreen } from '../vision/bridge.ts';
 
@@ -325,12 +326,21 @@ async function annotateWithVision(
       }));
     if (!crops.length) return 0;
 
+    /**
+     * ⛔ THIS WAS `as never as Record<string, never>` — a double cast through `never`,
+     * which is the strongest way there is to tell the compiler to stop looking. It made
+     * `res.results` a `never`, so the loop below could not be checked at all: a typo in
+     * `r.confidence`, a renamed field in the offscreen handler, or a reply shape that
+     * changed would all have compiled cleanly and produced silently unlabelled crops.
+     * The shape is known — the handler returns CropResult[] — so it is named here.
+     */
     const res = await callVision({
-      type: 'classify-crops', frameToken: dataUrl, crops, max: 12 }) as never as Record<string, never>;
+      type: 'classify-crops', frameToken: dataUrl, crops, max: 12,
+    }) as { error?: unknown; results?: CropResult[] } | undefined;
     if (res?.error) return 0;
 
     let n = 0;
-    for (const r of res.results ?? []) {
+    for (const r of res?.results ?? []) {
       const node = index.get(r.id);
       if (!node) continue;
       node.vision = { label: r.label, confidence: r.confidence, likelyPerson: r.likelyPerson };
@@ -365,7 +375,11 @@ async function askModel(
   try {
     const res = await fetch(`${serverUrl}/act`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      // x-aavaran-client is not a secret and is not authentication. The server refuses
+      // state-changing calls without it because a WEB PAGE cannot add a header to a
+      // cross-origin request without a preflight, and the preflight fails its origin
+      // check. Any page you visit can otherwise reach 127.0.0.1.
+      headers: { 'content-type': 'application/json', 'x-aavaran-client': '1' },
       body,
       signal: controller.signal,
     });

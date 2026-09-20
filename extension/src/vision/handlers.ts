@@ -17,7 +17,7 @@ import type { BoundingBox } from '../contracts.ts';
 import {
   loadFaceModel, detectFaces, blurRegions, prepareForTransmission, scaleToImage,
 } from './detect.ts';
-import { loadClassifier, classifyCrop } from './classify.ts';
+import { loadClassifier, classifyCrop, type CropResult } from './classify.ts';
 
 /** Where models resolve their files from. Set once by whichever host boots first. */
 let resolveUrl: (path: string) => string = (p) => p;
@@ -138,8 +138,15 @@ async function classifyCropsHandler(msg: VisionMessage): Promise<unknown> {
     bitmap = await createImageBitmap(await (await fetch(msg.dataUrl as string)).blob());
   }
 
-  const results = [];
-  const crops = (msg.crops as Array<{ id: string; box: never }>) ?? [];
+  /**
+   * ⛔ `const results = []` INFERS never[], so nothing could be pushed into it, and
+   * `box: never` said a crop's box can never hold a value. Both compiled only because
+   * strictNullChecks was off and the array fell back to any[]. A cast that names
+   * `never` is a cast that gave up — the real shape is a BoundingBox, which is what
+   * classifyCrop takes.
+   */
+  const results: CropResult[] = [];
+  const crops = (msg.crops as Array<{ id: string; box: BoundingBox }>) ?? [];
   for (const c of crops.slice(0, (msg.max as number) ?? 12)) {
     const r = await classifyCrop(bitmap, c.box, c.id);
     if (r) results.push(r);
