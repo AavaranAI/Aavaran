@@ -46,20 +46,30 @@ section "Build"
 run "extension builds (and manifests agree)" node build.mjs
 # esbuild strips types without checking them, so the build passing proves nothing about
 # whether an identifier exists. This is the check that would have caught
-# "ensureOffscreen is not defined" before it reached a live page.
-run "no undefined identifiers (tsc)" ./scripts/typecheck.sh
+# "ensureOffscreen is not defined" before it reached a live page. Since 20 Sep the
+# backlog is zero and the gate covers EVERY type error, not a chosen five.
+run "tsc clean — every type error gated" ./scripts/typecheck.sh
 
 section "Unit tests"
-for f in extension/src/pii/checksums.test.ts \
-         extension/src/pii/dom.test.ts \
-         extension/src/redact/sanitize.test.ts \
-         extension/src/pii/names.test.ts \
-         extension/src/content/extractor.test.ts \
-         extension/src/agent/validate.test.ts \
-         extension/src/background/panel-contract.test.ts \
-         extension/src/panel/threads.test.ts \
-         extension/src/agent/missing.test.ts \
-         extension/src/vision/faces.test.ts; do
+#
+# ⛔ THIS WAS A HAND-TYPED LIST OF TEN PATHS, AND IT WAS ALREADY WRONG.
+#
+# A test file added to the tree was simply not run — `dead-css.test.ts` was written,
+# passed on its own, sabotage-verified, and did not appear in the suite at all, because
+# nothing had added its path here. A test nobody runs is worse than no test: it is a
+# green tick for a thing that was never checked, and the author has every reason to
+# believe it is covered.
+#
+# Same failure as the designers' screen list on the same day — two hand-kept copies of
+# one fact. So the suite DISCOVERS them. `find` rather than a glob, because `**` needs
+# globstar and this script runs under whatever bash the machine has.
+UNIT_TESTS=$(find extension/src -name '*.test.ts' | sort)
+if [ -z "$UNIT_TESTS" ]; then
+  echo "  no unit tests found — the discovery glob is broken, which is not the same"
+  echo "  thing as having no tests"
+  exit 1
+fi
+for f in $UNIT_TESTS; do
   run "$(basename "$f")" $NODE "$f"
 done
 
@@ -107,6 +117,12 @@ if [ "$FULL" -eq 1 ]; then
       skip "Spike E" "(model server not running on :8975)"
     fi
     run "Spike G — throttled slow-machine timings" ./spikes/g-slow-machine/run.sh
+    # THE PANEL, AS A REAL EXTENSION PAGE. `scripts/panel-shot.mjs` serves it over http
+    # with chrome.* and fetch stubbed, which is right for rendering every state and
+    # blind to three things only the real thing has: the chrome-extension:// origin and
+    # MV3's CSP, the real chrome.* API, and a real service worker. The getManifest-shape
+    # bug lived in exactly that gap and took the whole status readout down with it.
+    run "the panel loads as a real extension page" node scripts/panel-shot-live.mjs
   else
     skip "Chrome spikes" "(no Chrome — run scripts/get-chrome-for-testing.sh)"
   fi
