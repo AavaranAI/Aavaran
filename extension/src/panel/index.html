@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Aavaran</title>
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#000000">
 <link rel="preload" href="../../fonts/archivo-black.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../../fonts/geist-var.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -29,8 +29,27 @@
           a compact sticky bar, which is what MetaMask does and what leaves the
           panel's height to content.
 
+     ── 20 Sep, 5th pass: MEASURED off the recording instead of remembered ──
+
+       4. NO STADIUM PILLS on controls. Its primary button is 280x48 with a
+          10px corner; its action tiles are 72x68 with the same. Every button
+          and input here was 999px. This was the biggest single tell left, and
+          three passes of colour work could not have found it, because nobody
+          had measured a corner.
+       5. SECONDARY CONTROLS ARE FILLED, NOT OUTLINED. Its Buy/Swap/Send/
+          Receive tiles carry no border at all. An outlined ghost button is a
+          web-page idiom.
+       6. THE PANEL IS PURE #000 — sampled, not guessed. The old value here
+          carried a comment claiming the opposite.
+       7. A SECTION HEADER IS GREY, plain and sentence case ("Manage", "Help
+          and settings"), not white, semibold and carrying an icon.
+       8. A SUB-SCREEN IS: back chevron top-left, CENTRED title, then full-bleed
+          rows with a leading icon and a trailing chevron, grouped by grey
+          headers with INSET hairlines. Destructive actions are a coloured ROW
+          in that list, like its red "Lock" — never a bordered button beside it.
+
      Also: at most two accents on screen at once. The working panel is white on
-     near-black; amber appears only where something was WITHHELD, which is the
+     black; amber appears only where something was WITHHELD, which is the
      product's output, and mint only on the one claim the product exists to make.
 
      THE SIGNATURE is the censor's bar — what sanitize() actually paints over a
@@ -40,14 +59,22 @@
   :root{
     color-scheme:dark;
 
-    --void:#0a0a0a;           /* the panel. matched to the recording, not pure #000 */
-    --pit:#050505;            /* recessed: inputs, code */
-    --row:#141414;            /* row hover wash */
-    --card:#161616;           /* a real object */
-    --card-2:#1c1c1c;
-    --edge:#232323;           /* hairline */
-    --edge-2:#333;            /* a border meant to be seen */
-    --edge-3:#4a4a4a;
+    /* ⛔ MEASURED OFF THE RECORDING, 20 Sep — not estimated from memory of it.
+       The panel IS pure black. The old value carried a comment claiming it was
+       "matched to the recording, not pure #000", and sampling the frames says
+       otherwise: every background region of MetaMask's main screen reads
+       (0,0,0). A near-black that is not black reads as a slightly grey card
+       floating on the browser's own black, which is exactly the "not quite a
+       real app" feeling. */
+    --void:#000;              /* the panel */
+    --sheet:#141414;          /* the menu/settings OVERLAY — a raised surface, #141414 */
+    --pit:#101012;            /* recessed: inputs, code */
+    --row:#1c1c1e;            /* row hover wash, sampled off the hovered rows */
+    --card:#161618;           /* a real object — matches MetaMask's action tiles */
+    --card-2:#1c1c1e;
+    --edge:#1a1a1a;           /* hairline — dividers sample #1a1a1a, not #232323 */
+    --edge-2:#2a2a2c;         /* a border meant to be seen */
+    --edge-3:#3d3d40;
 
     --ink:#fff;
     --ash:#9b9b9b;            /* secondary — neutral, never blue */
@@ -57,7 +84,26 @@
     --mint:#4ade80;
     --coral:#ff6b6b;
 
-    --r-pill:999px; --r-lg:16px; --r-md:11px;
+    /**
+     * ⛔⛔ THE SHAPE WAS THE BIGGEST TELL, AND IT WAS MEASURED.
+     *
+     * Every button and input in this panel was a STADIUM PILL (999px). MetaMask
+     * has almost none. Its primary button measures 280x48 CSS px and its corner
+     * reaches full width at 10px of depth — a 10px ROUNDED RECT. The action
+     * tiles measure 72x68 with the same 10px corner.
+     *
+     * A pill is a chip. Using it for every control is what makes an interface
+     * read as a landing page rather than as an instrument, and it is why the
+     * panel still did not look like the recording after three passes of getting
+     * the colours right.
+     *
+     * The pill survives ONLY where MetaMask uses one: small filter chips and
+     * badges, like its "All networks" control.
+     */
+    --r-btn:10px;             /* buttons, inputs — MEASURED */
+    --r-tile:10px;            /* action tiles, small surfaces */
+    --r-pill:999px;           /* chips and badges ONLY */
+    --r-lg:16px; --r-md:10px;
 
     /* stiffness 520, damping 30 -> zeta 0.658 */
     --spring:linear(0,.068,.2243,.413,.5972,.7558,.8795,.9672,1.0229,1.0528,
@@ -76,7 +122,7 @@
     font:13.5px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
     font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased;
   }
-  code,pre,.mono,.tok,.num{font-family:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
+  code,pre,.tok,.num{font-family:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
   input,button,select{font:inherit;color:inherit}
   .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
       clip-path:inset(50%);white-space:nowrap;border:0}
@@ -117,7 +163,7 @@
           display:flex;align-items:center;gap:10px;
           padding:13px 18px;border-bottom:1px solid var(--edge)}
   .topbar .sigil{width:22px;height:22px;flex:0 0 auto}
-  .topbar .name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .topbar .name{font-size:15px;font-weight:600;letter-spacing:-.01em}
   .lamp{margin-left:auto;display:flex;align-items:center;gap:7px;
         font-size:11.5px;color:var(--ash-2);font-weight:500}
   .lamp .dot{width:6px;height:6px;border-radius:50%;background:var(--ash-2);flex:0 0 auto;
@@ -127,20 +173,29 @@
   .lamp.bad{color:var(--coral)}
   .lamp.bad .dot{background:var(--coral);box-shadow:0 0 7px 1px rgba(255,107,107,.5)}
 
+  /* The gear. Settings used to be a disclosure wedged into the middle of the page,
+     so opening it SHOVED the product's own content down by 400px and the thing you
+     were reading moved. Configuration is not content: it belongs on its own screen,
+     reached from the chrome, which is where every extension worth copying puts it. */
+  #settings{position:static;margin:0 0 0 2px}
+  #settings > summary{padding:6px;margin:-6px -4px -6px 0;border-radius:var(--r-md);
+                      color:var(--ash-2);gap:0}
+  #settings > summary:hover{color:var(--ink);background:var(--row)}
+  #settings > summary .ic{width:17px;height:17px;color:currentColor}
+  #settings[open] > summary{color:var(--ink);background:var(--card-2)}
+
   .app{padding-bottom:26px}
-  /* One horizontal inset for everything that is not a full-bleed row. */
-  .pad{padding:0 18px}
 
   /* ───────────────────────────────────────────────────────────────────────
      ASK — sentence-case label, pill field, one white primary
      ─────────────────────────────────────────────────────────────────────── */
-  .ask{padding:22px 18px 0}
+  .ask{padding:17px 18px 0}
   /* Sentence case, 12.5px, NO tracking. The uppercase 9px version of this was
      tell number one. */
   .lbl-field{display:block;font-size:12.5px;color:var(--ash);font-weight:400;
              margin:0 0 8px 2px;width:fit-content}
-  #goal{width:100%;padding:14px 18px;background:var(--pit);
-        border:1px solid var(--edge-2);border-radius:var(--r-pill);
+  #goal{width:100%;padding:12px 17px;background:var(--pit);
+        border:1px solid var(--edge-2);border-radius:var(--r-btn);
         color:var(--ink);font-size:13.5px;
         transition:border-color .18s var(--ease)}
   #goal::placeholder{color:var(--ash-2)}
@@ -152,23 +207,28 @@
                     color .16s var(--ease),opacity .16s var(--ease)}
   button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
-  .btns{display:flex;gap:9px;margin-top:10px}
-  #run{flex:1;padding:14px 18px;border:0;border-radius:var(--r-pill);
+  .btns{display:flex;gap:9px;margin-top:9px}
+  #run{flex:1;padding:13px 18px;border:0;border-radius:var(--r-btn);
        background:var(--ink);color:#000;font-size:13.5px;font-weight:600;
        display:flex;align-items:center;justify-content:center;gap:8px}
   #run:hover:not(:disabled){background:#e6e6e6}
   #run:disabled{background:var(--card-2);color:var(--ash-2);cursor:default}
-  #run.demoted{background:transparent;border:1px solid var(--edge-2);color:var(--ash-2)}
-  #run.demoted:hover:not(:disabled){background:transparent;border-color:var(--edge-3);color:var(--ash)}
-  #stop{flex:0 0 auto;padding:14px 18px;border-radius:var(--r-pill);
+  #run.demoted{background:var(--card);border:0;color:var(--ash-2)}
+  #run.demoted:hover:not(:disabled){background:#222226;color:var(--ash)}
+  #stop{flex:0 0 auto;padding:14px 18px;border-radius:var(--r-btn);
         background:transparent;border:1px solid var(--coral);color:var(--coral);
         display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500}
   #stop:hover{background:rgba(255,107,107,.1)}
 
-  #scan{width:100%;margin-top:9px;padding:13px 18px;border-radius:var(--r-pill);
-        background:transparent;border:1px solid var(--edge-2);color:var(--ash);
+  /* FILLED, NOT OUTLINED. MetaMask's secondary controls — the Buy/Swap/Send/Receive
+     tiles and its dark "Add funds" — are solid #161618 with NO border at all. An
+     outlined ghost button is a web-page idiom; a filled tile is the app one, and
+     with a 10px corner it is most of what makes the pair read as a real toolbar. */
+  #scan{width:100%;margin-top:8px;padding:13px 18px;border-radius:var(--r-btn);
+        background:var(--card);border:0;color:var(--ink);
         display:flex;align-items:center;justify-content:center;gap:9px;font-size:13px}
-  #scan:hover:not(:disabled){border-color:var(--ink);color:var(--ink)}
+  #scan:hover:not(:disabled){background:#222226}
+  #scan .ic{color:var(--ash)}
   #scan:disabled{opacity:.5;cursor:default}
   #scan small{display:none}
   #scan.promoted{background:var(--ink);color:#000;border-color:var(--ink);font-weight:600}
@@ -177,10 +237,15 @@
   /* ───────────────────────────────────────────────────────────────────────
      SECTIONS — sentence-case headings, generous gaps BETWEEN, tight within
      ─────────────────────────────────────────────────────────────────────── */
-  .sec{margin-top:30px}
-  .sec > h2{margin:0 18px 12px;font-size:13.5px;font-weight:600;color:var(--ink);
-            letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
-  .sec > h2 .ic{color:var(--ash-2);width:15px;height:15px}
+  /* A SECTION HEADER IS GREY AND PLAIN. In the recording, "Manage" and "Help and
+     settings" are grey, sentence case, no icon, no rule, at the same left inset as
+     the rows they introduce. Ours was white, semibold and carried an icon, which
+     made a label for three example rows shout as loudly as the product's own name
+     in the bar above it. A heading that competes with the content is a heading
+     that has to be read twice. */
+  .sec{margin-top:20px}
+  .sec > h2{margin:0;padding:0 18px 8px;font-size:14px;font-weight:400;
+            color:var(--ash-2);letter-spacing:0}
   .sec > p{margin:0 18px 0;font-size:13px;line-height:1.6;color:var(--ash)}
 
   /* THE ROW IDIOM. Full bleed, no border, no divider — separation is the hover
@@ -188,11 +253,17 @@
      individually bordered rounded cards, which is tell number two. */
   .examples{display:flex;flex-direction:column}
   .ex{text-align:left;width:100%;background:transparent;border:0;
-      padding:14px 18px;color:var(--ink);font-size:13.5px;font-weight:400;
-      display:flex;align-items:center;gap:12px;border-radius:0}
-  /* No leading circle. MetaMask's rows have a circle because a TOKEN ICON goes in
-     it; ours would have held nothing. An empty avatar is decoration imitating
-     information, and the chevron already carries the affordance. */
+      padding:13px 18px;color:var(--ink);font-size:15px;font-weight:400;
+      display:flex;align-items:center;gap:13px;border-radius:0;min-height:54px}
+  /* A LEADING ICON, after all — but a glyph, never a circle.
+     The earlier note here banned the leading circle, and that was right: an empty
+     avatar ring is decoration imitating information. It then over-corrected into
+     no leading mark at all, which is not what the recording shows either. Every
+     row MetaMask draws has something in that column — a token logo on the asset
+     rows, a plain line icon on the menu rows. These are the menu kind, and each
+     one says what its row will do, so the column carries meaning rather than
+     filling space. */
+  .ex > .ic{width:18px;height:18px;color:var(--ash);stroke-width:1.8}
   .ex::after{content:'';flex:0 0 auto;margin-left:auto;width:6px;height:6px;
              border-right:1.5px solid var(--ash-2);border-top:1.5px solid var(--ash-2);
              transform:rotate(45deg);opacity:.6;transition:opacity .16s,border-color .16s}
@@ -215,7 +286,7 @@
            white-space:pre-wrap;overflow-wrap:anywhere;max-height:none;line-height:1.55}
   /* ── install the model, from here, instead of a terminal ─────────────── */
   .pullbtn{display:block;width:100%;margin-top:11px;padding:12px 16px;
-           border-radius:var(--r-pill);background:var(--ink);color:#000;border:0;
+           border-radius:var(--r-btn);background:var(--ink);color:#000;border:0;
            font-size:13px;font-weight:600}
   .pullbtn:hover:not(:disabled){background:#e6e6e6}
   .pullbtn:disabled{background:var(--card-2);color:var(--ash);cursor:default}
@@ -229,12 +300,12 @@
 
   /* pinned to the pre, not the block, so a caption above does not push it off */
   .cmd:has(.cmd-note) .copy{top:29px}
-  .copy{position:absolute;top:8px;right:8px;padding:5px 10px;border-radius:var(--r-pill);
-        background:var(--card-2);border:1px solid var(--edge-2);color:var(--ash);
+  .copy{position:absolute;top:8px;right:8px;padding:6px 11px;border-radius:var(--r-btn);
+        background:#2a2a2e;border:0;color:var(--ink);
         font-size:10.5px;font-weight:500}
-  .copy:hover{border-color:var(--ink);color:var(--ink)}
+  .copy:hover{background:#38383d}
 
-  .target{margin:26px 18px 0;padding-top:16px;border-top:1px solid var(--edge);
+  .target{margin:18px 18px 0;padding-top:15px;border-top:1px solid var(--edge);
           font-size:12.5px;color:var(--ash-2);display:flex;gap:9px;
           align-items:flex-start;line-height:1.5}
   .target::before{content:'';flex:0 0 auto;width:5px;height:5px;border-radius:50%;
@@ -245,9 +316,6 @@
   .target:has(.deny)::before{background:var(--coral)}
   .target .deny{display:block;color:var(--coral);font-weight:500;margin-bottom:2px}
 
-  /* No second hairline. The target row above already draws one, and two rules
-     10px apart read as an accidental sandwich rather than as structure. */
-  #settings{margin:4px 18px 0}
   summary{cursor:pointer;color:var(--ash);font-size:12.5px;padding:14px 0;
           list-style:none;display:flex;align-items:center;gap:9px;font-weight:400;
           transition:color .16s}
@@ -269,23 +337,87 @@
   summary:hover{color:var(--ink)}
   summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   summary .ic{color:var(--ash-2)}
-  #setsummary{margin-left:auto;font-size:11.5px}
-  #settings label{display:block;padding:0 0 8px;font-size:12px;
-                  color:var(--ash-2);font-weight:400}
-  #settings input{width:100%;padding:11px 15px;background:var(--pit);
-                  border:1px solid var(--edge-2);border-radius:var(--r-pill);
-                  color:var(--ink);font-size:12px;
-                  font-family:'Geist Mono',monospace;transition:border-color .16s}
-  #settings input:focus-visible{outline:none;border-color:var(--ink)}
-  .srvrow{display:flex;gap:8px;margin-bottom:10px}
-  .srvrow input{flex:1}
-  .setrow{display:flex;gap:8px;padding-bottom:16px}
-  #settings button{padding:10px 15px;background:transparent;
-                   border:1px solid var(--edge-2);border-radius:var(--r-pill);
-                   color:var(--ash);font-size:12px}
-  #settings button:hover{border-color:var(--ink);color:var(--ink)}
-  #serverstatus{padding:0 0 12px;font-size:11.5px;color:var(--ash-2)}
-  #serverstatus .mono{font-size:11px;color:var(--ash)}
+  /* ── THE SETTINGS SCREEN ──────────────────────────────────────────────
+     Rebuilt 20 Sep against the RECORDING rather than against a memory of it.
+     MetaMask's menu is: a bare back chevron top-left, a CENTRED title, and
+     full-bleed rows carrying a leading icon and a trailing chevron, grouped
+     under small GREY sentence-case section headers with inset hairlines
+     between them. What was here instead — a left title, a "Done" pill, and
+     bordered groups of prose — is an iOS sheet, not this.
+
+     The surface is #141414, not the panel's #000: in the recording the menu is
+     a raised layer over the app, and sampling it says so.
+
+     Fixed below the top bar, so the gear that opened it stays on screen and
+     stays the way out. That matters more than it looks: the sheet is opened
+     and closed by <details> alone, so a module that throws during import
+     cannot strand anyone inside it — the same reasoning as the splash. The
+     back chevron is an enhancement on top, never the only exit. */
+  .sheet{position:fixed;left:0;right:0;top:49px;bottom:0;z-index:15;
+         background:var(--sheet);overflow-y:auto;overscroll-behavior:contain;
+         padding:0 0 28px;animation:sheet-in .22s var(--ease)}
+  @keyframes sheet-in{from{opacity:0;transform:translateY(10px)}}
+  .sheet-head{position:sticky;top:0;z-index:1;background:var(--sheet);
+              display:flex;align-items:center;padding:12px 14px 12px}
+  /* Centred by grid, not by margin auto: the title stays optically centred in
+     the panel regardless of how wide the back control is. */
+  .sheet-head h2{margin:0;flex:1;text-align:center;font-size:17px;font-weight:600;
+                 letter-spacing:-.015em;padding-right:34px}
+  .back{width:34px;height:34px;flex:0 0 auto;padding:0;border:0;border-radius:var(--r-btn);
+        background:transparent;color:var(--ink);
+        display:flex;align-items:center;justify-content:center}
+  .back:hover{background:var(--row)}
+  .back .ic{width:20px;height:20px;stroke-width:2.2}
+
+  /* A SECTION HEADER, MetaMask's way: grey, sentence case, no tracking, no
+     icon, no rule of its own. "Manage" and "Help and settings" in the
+     recording are exactly this and nothing more. */
+  .grp{padding:6px 0 0}
+  .grp + .grp{margin-top:2px;padding-top:10px}
+  /* Inset, not full-bleed — the divider in the recording stops short of both
+     edges, which is what stops a list of rows reading as a table. */
+  .grp + .grp::before{content:'';display:block;height:1px;background:var(--edge);
+                      margin:0 16px 10px}
+  .grp-h{display:block;margin:0 0 2px;padding:0 18px 7px;font-size:14px;
+         font-weight:400;color:var(--ash-2);letter-spacing:0}
+
+  /* THE ROW. Full bleed, 56px, leading icon, hover wash to the edges. */
+  .srow{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+        padding:13px 18px;background:transparent;border:0;color:var(--ink);
+        font-size:15px;font-weight:400;min-height:54px}
+  button.srow{cursor:pointer}
+  button.srow:hover{background:var(--row)}
+  .srow > .ic{width:19px;height:19px;color:var(--ash);stroke-width:1.8}
+  .srow-body{flex:1 1 auto;min-width:0}
+  .srow-body b{display:block;font-weight:400;color:var(--ink)}
+  .srow-body span{display:block;margin-top:2px;font-size:13px;color:var(--ash-2);
+                  line-height:1.5}
+  /* The destructive row is COLOURED, not boxed — MetaMask's "Lock" is a red row
+     in the same list, not a bordered button sitting outside it. */
+  .srow.danger{color:var(--coral)}
+  .srow.danger > .ic{color:var(--coral)}
+  .srow.danger:hover{background:rgba(255,107,107,.08)}
+  .srow[disabled]{opacity:.5;cursor:default}
+
+  /* The one place a control has to live inside a row rather than beside it. */
+  .grp-field{padding:2px 18px 14px}
+  .sheet input{width:100%;padding:12px 14px;background:var(--pit);
+               border:1px solid var(--edge-2);border-radius:var(--r-btn);
+               color:var(--ink);font-size:12.5px;
+               font-family:'Geist Mono',monospace;transition:border-color .16s}
+  .sheet input:focus-visible{outline:none;border-color:var(--ink)}
+  .srvrow{display:flex;gap:8px}
+  .srvrow input{flex:1;min-width:0}
+  /* ⚠ NOT var(--card). On the sheet's own #141414 surface a #161618 button is
+     invisible — it rendered as a word floating in space with no button under it.
+     A control on a raised surface has to be raised AGAIN to read as a control. */
+  .sheet .srvrow button{flex:0 0 auto;padding:0 16px;background:#2a2a2e;
+                   border:0;border-radius:var(--r-btn);
+                   color:var(--ink);font-size:12.5px;white-space:nowrap}
+  .sheet .srvrow button:hover{background:#38383d}
+  #serverstatus{margin-top:9px;font-size:12px;color:var(--ash-2)}
+  .grp-note{margin:0;padding:0 18px 16px;font-size:12px;line-height:1.65;
+            color:var(--ash-2)}
 
   /* ───────────────────────────────────────────────────────────────────────
      STATUS / STEPPER
@@ -381,8 +513,14 @@
      totals and the turn-by-turn ledger, which are the evidence for it. */
   .answer{margin:18px 18px 0;padding:16px 17px;border-radius:var(--r-lg);
           background:var(--card-2)}
-  .answer h2{margin:0 0 9px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
-             color:var(--ash-2);font-weight:600}
+  /* ⛔ THIS WAS A 9.5px/.14em UPPERCASE MICRO-LABEL — rule 1 at the top of this file,
+     violated in the file that states it. "4 values needed" was being SHOUTED as
+     "4 VALUES NEEDED" directly above the form a judge is asked to fill in. The text
+     itself was always sentence case; the stylesheet was doing the shouting.
+     It survived because it arrived with the ask card after the ban was written, and
+     nothing checks a rule that lives in a comment. */
+  .answer h2{margin:0 0 9px;font-size:14px;letter-spacing:0;text-transform:none;
+             color:var(--ash);font-weight:500}
   .answer p{margin:0 0 10px;font-size:14px;line-height:1.55;color:var(--ink)}
   .answer .t{padding-top:10px;border-top:1px solid var(--edge)}
 
@@ -394,8 +532,12 @@
   /* The thread bar. Sits under the target row and above Settings, because "which
      conversation am I in" belongs with "which page will be acted on" — they are the same
      question asked about time and about space. */
-  .threadbar{margin:10px 18px 0;padding:11px 13px;border-radius:var(--r-md);
-             background:var(--card);border:1px solid var(--edge)}
+  /* No card. "Which page" and "which conversation" are the same question asked
+     about space and about time, so they read as ONE context strip under the
+     controls — a bordered box around the second half made two status blocks out
+     of one fact and cost 20px of frame to say nothing. Indented to 14px so the
+     text lines up under the target line's own text, not under its bullet. */
+  .threadbar{margin:7px 18px 0;padding:0 0 0 14px}
   .trow{display:flex;gap:8px;align-items:center;min-width:0}
   .trow + .trow{margin-top:9px}
   /* min-width:0 so a long thread title truncates instead of shoving the buttons off a
@@ -403,15 +545,17 @@
   .tlabel{flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--ash);
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tlabel b{color:var(--ink);font-weight:600}
-  .tdot{flex:0 0 auto;width:6px;height:6px;border-radius:var(--r-pill);background:var(--amber)}
-  .threadbar button{flex:0 0 auto;padding:7px 11px;border:0;border-radius:var(--r-pill);
+  /* ⛔ The amber dot is gone. It rendered in all three thread states, so it
+     distinguished nothing — and amber is the colour that means WITHHELD. Spending
+     the one semantic accent on a permanent decoration is how it stops being read
+     as meaning anything. Same rule that took it off the promoted Scan button. */
+  .threadbar button{flex:0 0 auto;padding:7px 11px;border:0;border-radius:var(--r-btn);
                     background:var(--ink);color:#000;font-size:11.5px;font-weight:600;
                     white-space:nowrap}
   .threadbar button:hover{background:#e6e6e6}
-  .threadbar button.tghost{background:transparent;border:1px solid var(--edge-2);
+  .threadbar button.tghost{background:var(--card);border:0;
                            color:var(--ash);font-weight:500}
-  .threadbar button.tghost:hover{border-color:var(--edge-3);color:var(--ink);
-                                 background:transparent}
+  .threadbar button.tghost:hover{color:var(--ink);background:#222226}
   .threadbar .t{margin-top:8px}
 
   /* One question per row: a label, then the control it actually is. Radios are rendered
@@ -444,7 +588,7 @@
   .askrow input:focus-visible{outline:none;border-color:var(--ink)}
   .askrow input::placeholder{color:var(--ash-2)}
   /* Same treatment as #run — this is the button that continues the run. */
-  .askrow button{flex:0 0 auto;padding:11px 15px;border:0;border-radius:var(--r-pill);
+  .askrow button{flex:0 0 auto;padding:11px 15px;border:0;border-radius:var(--r-btn);
                  background:var(--ink);color:#000;font-size:12.5px;font-weight:600;
                  white-space:nowrap}
   .askrow button:hover:not(:disabled){background:#e6e6e6}
@@ -536,11 +680,24 @@
       border-radius:var(--r-md);font-size:11px;color:var(--ash);max-height:220px;
       overflow:auto;white-space:pre-wrap;overscroll-behavior:contain}
 
-  .note{margin:26px 18px 0;padding-top:17px;border-top:1px solid var(--edge);
+  .note{margin:24px 18px 0;padding-top:16px;border-top:1px solid var(--edge);
         font-size:12px;color:var(--ash-2);line-height:1.65;
         display:flex;gap:11px;align-items:flex-start}
   .note b{color:var(--ash);font-weight:500}
   .note .ic{color:var(--ash-2);margin-top:2px}
+  /* It talks about "every count here", and on the empty state there are no counts
+     — so it was a standing claim with nothing to stand on, printed under a screen
+     that already carried the same promise three lines higher. Two permanent claims
+     is how both stop being read. It appears when there is something to count. */
+  #empty:not([hidden]) ~ .note{display:none}
+
+  /* The one-line version of the promise, for the empty state.
+     ⛔ NOT display:flex — marker + prose is the trap this file has hit four times.
+     The icon is positioned; there is no flex container to mis-parent the sentence. */
+  .claim{position:relative;margin:22px 18px 0;padding:0 0 0 23px;
+         font-size:12px;line-height:1.6;color:var(--ash-2)}
+  .claim .ic{position:absolute;left:0;top:2px;width:15px;height:15px;color:var(--ash-2)}
+  .claim b{color:var(--ash);font-weight:500}
 
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.001ms !important;
@@ -575,6 +732,76 @@
       <span class="sr">Reasoning server:</span>
       <span id="lamptext">checking…</span>
     </div>
+
+    <!-- Settings lives in the chrome and opens its own screen. It was a disclosure
+         in the middle of the page, so opening it pushed What this does and the
+         examples 400px down the panel. The <details> is kept as the mechanism
+         because it opens and closes without a line of script running. -->
+    <details id="settings">
+      <summary aria-label="Settings" title="Settings">
+        <i data-lucide="settings-2" class="ic"></i>
+      </summary>
+      <div class="sheet">
+        <div class="sheet-head">
+          <button type="button" id="closesettings" class="back" aria-label="Back">
+            <i data-lucide="chevron-left" class="ic"></i>
+          </button>
+          <h2>Settings</h2>
+        </div>
+
+        <section class="grp">
+          <!-- The heading IS the label. A group title that is decorative leaves the
+               input with no accessible name, and the a11y assertion in panel-shot
+               is what would report it. -->
+          <label class="grp-h" for="server">Connection</label>
+          <div class="grp-field">
+            <div class="srvrow">
+              <input id="server" name="server" type="url" inputmode="url" spellcheck="false"
+                     autocomplete="off" autocapitalize="none" placeholder="http://127.0.0.1:8975">
+              <button type="button" id="testsrv" title="Check this server now">Test</button>
+            </div>
+            <div class="t" id="serverstatus" role="status" aria-live="polite">not checked</div>
+          </div>
+          <button type="button" id="autodetect" class="srow">
+            <i data-lucide="radar" class="ic"></i>
+            <span class="srow-body"><b>Find my server</b>
+              <span>Try the usual ports on this machine</span></span>
+          </button>
+          <button type="button" id="resetsrv" class="srow">
+            <i data-lucide="rotate-ccw" class="ic"></i>
+            <span class="srow-body"><b>Reset to default</b>
+              <span>127.0.0.1:8975</span></span>
+          </button>
+        </section>
+
+        <!-- Threads are local history: which sites the agent was used on, and what was
+             asked. Kept on this machine and never transmitted — but it IS history, so the
+             way to destroy it has to be visible rather than buried in a policy document. -->
+        <section class="grp">
+          <h3 class="grp-h">Conversations</h3>
+          <div class="srow">
+            <i data-lucide="message-square" class="ic"></i>
+            <span class="srow-body"><b>Saved on this machine</b>
+              <span id="threadcount">no saved conversations</span></span>
+          </div>
+          <button type="button" id="wipethreads" class="srow danger">
+            <i data-lucide="trash-2" class="ic"></i>
+            <span class="srow-body"><b>Delete all conversations</b></span>
+          </button>
+        </section>
+
+        <!-- Prose, NOT a row. A row's icon centres against its content, so a
+             five-line paragraph left the shield hanging in the middle of the
+             text block with nothing to mark. Rows are for things you do. -->
+        <section class="grp">
+          <h3 class="grp-h">About</h3>
+          <p class="grp-note">Aavaran reads the page, strips every PAN, Aadhaar, card,
+            password and face on your machine, then asks an AI what to do. Only the
+            censored version is ever sent — and the proof card after each run searches
+            the exact bytes for every value it held back.</p>
+        </section>
+      </div>
+    </details>
   </header>
 
   <div class="ask">
@@ -603,51 +830,30 @@
        Populated by renderThreadBar(); hidden on pages an extension cannot act on. -->
   <div class="threadbar" id="threadbar" role="status" aria-live="polite" hidden></div>
 
-  <details id="settings">
-    <!-- No status chip here. The top bar's lamp already states the server's
-         condition, and saying it twice ten pixels apart is noise, not emphasis. -->
-    <summary><i data-lucide="settings-2" class="ic"></i>Settings</summary>
-    <label for="server">Reasoning server</label>
-    <div class="srvrow">
-      <input id="server" name="server" type="url" inputmode="url" spellcheck="false"
-             autocomplete="off" autocapitalize="none" placeholder="http://127.0.0.1:8975">
-      <button id="testsrv" title="Check this server now">Test</button>
-    </div>
-    <div class="t" id="serverstatus" role="status" aria-live="polite">not checked</div>
-    <div class="setrow">
-      <button id="autodetect">Find my server</button>
-      <button id="resetsrv">Reset to default</button>
-    </div>
-
-    <!-- Threads are local history: which sites the agent was used on, and what was
-         asked. Kept on this machine and never transmitted — but it IS history, so the
-         way to destroy it has to be visible rather than buried in a policy document. -->
-    <label for="wipethreads">Conversations</label>
-    <div class="t" id="threadcount">no saved conversations</div>
-    <div class="setrow">
-      <button id="wipethreads">Delete all conversations</button>
-    </div>
-  </details>
-
   <!-- Starts hidden and empty. It held "Idle — nothing has been transmitted",
        which was a large card saying that nothing had happened yet — the reader
        can already see that. It appears the moment there IS something to report. -->
   <div class="phase" id="phase" role="status" aria-live="polite" hidden></div>
 
+  <!-- The actionable thing first. This led with a heading, an icon and a
+       three-line paragraph explaining the product, so the three things you can
+       actually press started 200px down a 400px-wide panel. The explanation is
+       one line now, under the examples, and the long version is in Settings. -->
   <div id="empty">
     <div class="sec">
-      <h2><i data-lucide="shield-check" class="ic"></i>What this does</h2>
-      <p>Reads the page, strips every PAN, Aadhaar, card, password and face on your
-         machine, then asks an AI what to do. Only the censored version is ever sent.</p>
-    </div>
-    <div class="sec">
-      <h2><i data-lucide="lightbulb" class="ic"></i>Try one of these</h2>
+      <h2>Try one of these</h2>
       <div class="examples">
-        <button class="ex">Fill in this form and submit it</button>
-        <button class="ex">Find the contact details on this page</button>
-        <button class="ex">What do I need to complete here?</button>
+        <button class="ex"><i data-lucide="file-text" class="ic"></i>
+          <span>Fill in this form and submit it</span></button>
+        <button class="ex"><i data-lucide="search" class="ic"></i>
+          <span>Find the contact details on this page</span></button>
+        <button class="ex"><i data-lucide="list-checks" class="ic"></i>
+          <span>What do I need to complete here?</span></button>
       </div>
     </div>
+    <p class="claim"><i data-lucide="shield-check" class="ic"></i>
+      <b>Nothing leaves uncensored.</b> Every PAN, Aadhaar, card, password and face is
+      destroyed on your machine before the page is sent.</p>
   </div>
 
   <div id="ledger"></div>

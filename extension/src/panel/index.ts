@@ -10,12 +10,25 @@
 
 import { animate, stagger, press, hover } from 'motion';
 import { missingFields, type MissingField } from '../agent/missing.ts';
+/**
+ * The worker's own record type, imported rather than re-described as `any`.
+ *
+ * It is a type-only import, so it is erased at build and adds nothing to the bundle.
+ * The panel was annotating every one of these callbacks `any`, which in a file that
+ * renders the product's entire evidence trail means a renamed field in the
+ * orchestrator compiles cleanly here and shows up as a blank cell in front of a judge.
+ * `panel-contract.test.ts` guards which fields cross the boundary; this guards what
+ * they are once across.
+ */
+import type { TurnRecord } from '../background/orchestrator.ts';
+import type { SanitizedNode } from '../contracts.ts';
 import {
   decide, originOf, threadFor, getThread, createThread, appendRun, listThreads, deleteAll,
   type Thread, type ThreadVerdict,
 } from './threads.ts';
 import {
   createIcons, Zap, Square, ScanEye, Settings2, ShieldCheck, Lightbulb, FileSearch,
+  ChevronLeft, Radar, RotateCcw, MessageSquare, Trash2, FileText, Search, ListChecks,
 } from 'lucide';
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -89,7 +102,9 @@ function countUp(el: Element, to: number, suffix = ''): void {
  * which is verified by sabotage — that is the case it exists for.
  */
 createIcons({
-  icons: { Zap, Square, ScanEye, Settings2, ShieldCheck, Lightbulb, FileSearch },
+  icons: { Zap, Square, ScanEye, Settings2, ShieldCheck, Lightbulb, FileSearch,
+           ChevronLeft, Radar, RotateCcw, MessageSquare, Trash2, FileText, Search,
+           ListChecks },
   attrs: { 'stroke-width': 2.1, 'aria-hidden': 'true', focusable: 'false' },
 });
 
@@ -142,10 +157,10 @@ interface Preview { token: string; kind: string; masked: string }
  * Returns '' when it cannot be found, and the caller stores that happily — a question
  * with no field name still reads fine ("It stopped waiting on you: What is your PAN?").
  */
-function labelOfTarget(res: any, target: unknown): string {
+function labelOfTarget(res: { records?: TurnRecord[] } | undefined, target: unknown): string {
   if (typeof target !== 'string') return '';
   for (const rec of res?.records ?? []) {
-    const found = (function walk(n: any): string | undefined {
+    const found = (function walk(n: SanitizedNode | undefined): string | undefined {
       if (!n) return undefined;
       if (n.id === target && typeof n.label === 'string') return n.label;
       for (const c of n.children ?? []) { const r = walk(c); if (r) return r; }
@@ -222,10 +237,10 @@ function renderMissingForm(missing: MissingField[], question?: string): string {
     + `Anything you leave blank is skipped.</div></div>`;
 }
 
-function renderTurn(rec: any, previews: Map<string, Preview>): string {
+function renderTurn(rec: TurnRecord, previews: Map<string, Preview>): string {
   const t = rec.timings;
   const chips = (rec.withheld ?? [])
-    .map((w: any) => `<span class="chip"><b>${w.count}</b> ${esc(w.kind)}</span>`).join('')
+    .map((w) => `<span class="chip"><b>${w.count}</b> ${esc(w.kind)}</span>`).join('')
     || '<span class="chip">nothing withheld</span>';
 
   const faces = rec.facesBlurred
@@ -236,7 +251,7 @@ function renderTurn(rec: any, previews: Map<string, Preview>): string {
   const struck = rec.piiMasked
     ? `<span class="chip"><b>${rec.piiMasked}</b> struck out of screenshot</span>` : '';
 
-  const actions = (rec.actions ?? []).map((a: any) => `
+  const actions = (rec.actions ?? []).map((a) => `
     <div class="row">
       <span class="${a.allowed ? 'allow' : 'deny'}">${a.allowed ? 'ALLOW' : 'DENY '}</span>
       <b>${esc(a.action.kind)}</b> ${esc(a.action.target ?? '')}
@@ -355,7 +370,8 @@ function scanOnlyAdvice(): void {
  */
 async function loadServer(): Promise<string> {
   const { serverUrl } = await chrome.storage.local.get('serverUrl');
-  return serverUrl || DEFAULT_SERVER;
+  // Checked, not coerced — storage is untyped, and this string is used as a URL.
+  return typeof serverUrl === 'string' && serverUrl ? serverUrl : DEFAULT_SERVER;
 }
 
 /** Probe one URL. Short timeout: a wrong port should fail fast, not hang. */
@@ -445,6 +461,42 @@ function versionNote(serverVersion?: string): string {
     + `</div>`;
 }
 
+/**
+ * WAIT FOR THE SERVER THE INSTRUCTIONS JUST ASKED FOR.
+ *
+ * The panel probes when it opens and when Test is pressed, and that is the whole list —
+ * so the one path the advice itself sends you down was the one the panel could not see
+ * the end of. You read "paste these into a terminal", switch to Terminal, start both
+ * processes, switch back, and the panel is still showing you how to start a server that
+ * is now running, because nothing asked again. The user is left to guess that a control
+ * inside Settings would fix a message on the main screen.
+ *
+ * So while it is down, watch for it. This adds no new destination — it is the same
+ * localhost health check the panel already makes, so "the only outbound request goes to
+ * 127.0.0.1" stays exactly as true as it was.
+ *
+ * ⚠ It polls SILENTLY. Routing this through checkServer would rewrite the status to
+ * "checking…" and flick the lamp every few seconds, which reads as a panel that cannot
+ * make up its mind. The full render happens once, when the answer actually changes.
+ */
+let serverWatch: ReturnType<typeof setInterval> | undefined;
+
+function stopWatching(): void {
+  if (serverWatch !== undefined) { clearInterval(serverWatch); serverWatch = undefined; }
+}
+
+function watchForServer(url: string): void {
+  stopWatching();           // never two timers on the same question
+  serverWatch = setInterval(() => {
+    void (async () => {
+      const r = await probe(url, 2500);
+      // `detail` means the server answered and the MODEL is missing — a different
+      // screen, but still a change worth rendering. Only "unreachable" means keep waiting.
+      if (r.ok || r.detail) { stopWatching(); void checkServer(url); }
+    })();
+  }, 3000);
+}
+
 async function checkServer(url: string): Promise<boolean> {
   const el = $('serverstatus');
   el.innerHTML = 'checking…';
@@ -460,6 +512,21 @@ async function checkServer(url: string): Promise<boolean> {
     el.innerHTML = `<span class="allow">ready</span> · ${esc(r.model ?? '')}`
       + (stale ? ` · <span class="deny">v${esc(r.version ?? '')}</span>` : '');
     setLamp('ok', stale ? 'server old' : 'ready');
+    /**
+     * ⛔ AND THE ADVICE HAS TO GO AWAY AGAIN.
+     *
+     * This branch set the status and the lamp and never touched the box, and the ONLY
+     * line in the panel that hid it was inside the model-download path. So a successful
+     * probe left "The reasoning server is not running", with the commands to start it,
+     * sitting under a green lamp reading "ready" — the panel stating both halves of a
+     * contradiction at once, on a product whose entire argument is that you can check
+     * what it tells you. Whichever one the reader believes, the panel was wrong.
+     *
+     * Kept when the version note is showing: that box then holds the STALE warning,
+     * which is a live fact about a server that is up.
+     */
+    if (!stale) { const box = $('serveradvice'); box.hidden = true; box.innerHTML = ''; }
+    stopWatching();
   } else if (r.detail) {
     el.innerHTML = `<span class="deny">not ready</span> · ${esc(r.detail)}`;
     setLamp('bad', 'no model');
@@ -484,10 +551,15 @@ async function checkServer(url: string): Promise<boolean> {
       box.hidden = false;
       $('pullmodel').addEventListener('click', () => void pullModel(url));
     }
+    // The server is up. Nothing left to wait for — the missing piece is the model,
+    // and that has a button.
+    stopWatching();
   } else {
     el.innerHTML = '<span class="deny">unreachable</span>';
     setLamp('bad', 'offline');
     showStartAdvice();
+    // The one state where the panel is telling you to go and start something.
+    watchForServer(url);
   }
   return r.ok;
 }
@@ -524,7 +596,11 @@ async function pullModel(serverUrl: string): Promise<void> {
   }, 5_000);
 
   try {
-    const res = await fetch(`${serverUrl}/pull`, { method: 'POST' });
+    // See orchestrator.ts: without this header a page you were merely visiting
+    // could start a 6 GB download on your machine, because a POST with no body
+    // is a simple request and CORS does not stop it being executed.
+    const res = await fetch(`${serverUrl}/pull`, {
+      method: 'POST', headers: { 'x-aavaran-client': '1' } });
     if (!res.ok || !res.body) throw new Error(`server returned ${res.status}`);
 
     const reader = res.body.getReader();
@@ -652,9 +728,33 @@ function cmdBlock(cmds: Array<{ cmd: string; note?: string }>): string {
 document.addEventListener('click', (e) => {
   const btn = (e.target as HTMLElement)?.closest?.('.copy') as HTMLButtonElement | null;
   if (!btn) return;
+  /**
+   * ⛔ THIS HAD NO FAILURE PATH, ON THE CONTROL THE WHOLE HANDOVER DEPENDS ON.
+   *
+   * These are the commands that start the reasoning server, and Copy is how Ma'am and
+   * the judges are meant to get them into a terminal. `writeText` rejects for reasons
+   * that have nothing to do with us — the document not being focused, a denied
+   * permission, a browser that gates the API — and the rejection was unhandled: the
+   * label never changed, nothing was on the clipboard, and the user pastes an empty
+   * buffer into a terminal with no idea anything failed.
+   *
+   * So the failure path SELECTS the command instead, which leaves ⌘C working, and says
+   * so on the button.
+   */
   void navigator.clipboard.writeText(btn.dataset.cmd ?? '').then(() => {
     btn.textContent = 'Copied';
     setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
+  }).catch(() => {
+    const pre = btn.closest('.cmd')?.querySelector('pre');
+    if (pre) {
+      const range = document.createRange();
+      range.selectNodeContents(pre);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+    btn.textContent = pre ? 'Selected — press ⌘C' : 'Copy failed';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 3000);
   });
 });
 
@@ -719,6 +819,26 @@ $('server').addEventListener('change', async (e) => {
 });
 
 /**
+ * Don't poll a panel nobody is looking at, and look again the moment they come back.
+ *
+ * ⚠ The POLL is what actually catches the terminal case, not this. Switching to
+ * Terminal and back does not hide the document — visibility is about the tab being
+ * occluded, not about which application has focus — so a handler here would never fire
+ * on the exact path the advice sends the reader down. This only stops the timer when
+ * the panel really is out of sight, and takes the 3-second wait off the return trip.
+ */
+const currentServer = (): string =>
+  ($('server') as HTMLInputElement).value.trim() || DEFAULT_SERVER;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopWatching(); return; }
+  if (!$('serveradvice').hidden) void checkServer(currentServer());
+});
+window.addEventListener('focus', () => {
+  if (serverWatch !== undefined) void checkServer(currentServer());
+});
+
+/**
  * Say which page will be acted on.
  *
  * The agent acts on the ACTIVE TAB, not on whatever the user was last looking at. With
@@ -776,14 +896,14 @@ function renderThreadBar(v: ThreadVerdict): void {
   bar.hidden = false;
 
   if (v.kind === 'continue') {
-    bar.innerHTML = `<div class="trow"><span class="tdot"></span>`
+    bar.innerHTML = `<div class="trow">`
       + `<span class="tlabel">Continuing <b>${esc(v.thread.title)}</b></span>`
       + `<button type="button" id="thnew" class="tghost">New thread</button></div>`
       + (v.thread.pending
         ? `<div class="t">Waiting on you: ${esc(v.thread.pending.question)}</div>` : '');
   } else if (v.kind === 'resume') {
     const when = new Date(v.thread.updatedAt).toLocaleDateString();
-    bar.innerHTML = `<div class="trow"><span class="tdot"></span>`
+    bar.innerHTML = `<div class="trow">`
       + `<span class="tlabel">You were here on ${esc(when)} — `
       + `<b>${esc(v.thread.title)}</b></span></div>`
       + `<div class="trow"><button type="button" id="thresume">Continue where you left off`
@@ -792,7 +912,7 @@ function renderThreadBar(v: ThreadVerdict): void {
         ? `<div class="t">It stopped waiting on you: ${esc(v.thread.pending.question)}</div>`
         : `<div class="t">${plural(v.thread.turns.length, 'turn')} so far.</div>`);
   } else {
-    bar.innerHTML = `<div class="trow"><span class="tdot"></span>`
+    bar.innerHTML = `<div class="trow">`
       + `<span class="tlabel">No conversation on this site yet</span>`
       + `<button type="button" id="thnew" class="tghost">Start a thread</button></div>`;
   }
@@ -825,6 +945,42 @@ async function refreshThreadSettings(): Promise<void> {
     ? `${plural(all.length, 'conversation')} across ${plural(sites, 'site')}, on this machine only`
     : 'no saved conversations';
 }
+/**
+ * Closing the settings screen.
+ *
+ * ADDITIVE, on purpose. The screen is a <details> and its <summary> is the gear in
+ * the top bar, which stays visible beside it — so opening and closing both work with
+ * no script at all. This is the second, more obvious exit and the Escape key; if this
+ * module ever throws before reaching here, nobody is trapped on the settings screen.
+ */
+const settingsEl = $('settings') as HTMLDetailsElement;
+$('closesettings').addEventListener('click', () => { settingsEl.open = false; });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && settingsEl.open) settingsEl.open = false;
+});
+
+/**
+ * WHAT THE SHEET COVERS, IT MUST ALSO TAKE OUT OF THE TAB ORDER.
+ *
+ * The settings screen is painted over the panel, and a fixed overlay hides things from
+ * the eye and from nothing else: Tab still walked into Run, Scan and the goal box
+ * underneath it. Focus then sits on a control the user cannot see, and the next Enter
+ * starts an agent run from what looks like a settings screen.
+ *
+ * `inert` is the one thing that removes a subtree from focus, hit-testing and the
+ * accessibility tree together — a `tabindex="-1"` sweep would fix the Tab order and
+ * still leave the whole thing announced to a screen reader as though it were on screen.
+ *
+ * ⚠ Additive, like the Done button. The sheet opens and closes on <details> alone; if
+ * this never runs the panel behaves exactly as it did before, which is the same
+ * reasoning that keeps the launch screen dismissable by CSS.
+ */
+const behindSheet = () =>
+  Array.from(document.querySelectorAll<HTMLElement>('.app > *:not(.topbar)'));
+const setInert = (on: boolean) => { for (const el of behindSheet()) el.inert = on; };
+settingsEl.addEventListener('toggle', () => setInert(settingsEl.open));
+setInert(settingsEl.open);
+
 $('wipethreads').addEventListener('click', async () => {
   const btn = $('wipethreads') as HTMLButtonElement;
   btn.disabled = true;
@@ -874,7 +1030,11 @@ $('stop').addEventListener('click', () => {
 // closes a tool without ever running it.
 for (const b of Array.from(document.querySelectorAll('.ex'))) {
   b.addEventListener('click', () => {
-    ($('goal') as HTMLInputElement).value = (b as HTMLElement).textContent!.trim();
+    // The row now carries a leading icon, so read the LABEL, not the whole row.
+    // `textContent` still happens to work — an <svg> contributes no text — but it
+    // is true by accident, and the next thing added to the row breaks the goal.
+    const label = (b.querySelector('span') ?? b) as HTMLElement;
+    ($('goal') as HTMLInputElement).value = label.textContent!.trim();
     ($('run') as HTMLButtonElement).click();
   });
 }
@@ -992,10 +1152,10 @@ $('run').addEventListener('click', async () => {
       // Session totals up front. A judge should see the headline number without
       // adding up chips across turns.
       const totalWithheld = res.records.reduce(
-        (a: number, r: any) => a + (r.withheld ?? []).reduce((x: number, w: any) => x + w.count, 0), 0);
-      const totalFaces = res.records.reduce((a: number, r: any) => a + (r.facesBlurred ?? 0), 0);
-      const totalMasked = res.records.reduce((a: number, r: any) => a + (r.piiMasked ?? 0), 0);
-      const totalMs = res.records.reduce((a: number, r: any) => a + r.timings.totalMs, 0);
+        (a: number, r: TurnRecord) => a + (r.withheld ?? []).reduce((x, w) => x + w.count, 0), 0);
+      const totalFaces = res.records.reduce((a: number, r: TurnRecord) => a + (r.facesBlurred ?? 0), 0);
+      const totalMasked = res.records.reduce((a: number, r: TurnRecord) => a + (r.piiMasked ?? 0), 0);
+      const totalMs = res.records.reduce((a: number, r: TurnRecord) => a + r.timings.totalMs, 0);
       // "values leaked" is marked hero: it is the one figure the product exists
       // to be able to show, and it was previously the same weight as "total time".
       const cells: Array<[number, string, string, boolean]> = [
@@ -1108,7 +1268,7 @@ $('run').addEventListener('click', async () => {
        * sent". This says "here is what we sent, and here is the check that none of your
        * data is in it, run against your actual data."
        */
-      const transcript = JSON.stringify(res.records.map((r: any) => ({
+      const transcript = JSON.stringify(res.records.map((r: TurnRecord) => ({
         turn: r.turn, sent: r.transmitted, received: r.received,
       })));
       let proofHtml = '';
@@ -1198,7 +1358,7 @@ $('run').addEventListener('click', async () => {
       // that needs the user to do something; burying it under a transcript would be the
       // withheld-screenshot mistake again — a state that exists and nobody notices.
       $('ledger').innerHTML = askHtml + proofHtml + answerHtml + totals
-        + res.records.map((r: any) => renderTurn(r, previews)).join('');
+        + res.records.map((r: TurnRecord) => renderTurn(r, previews)).join('');
 
       /**
        * ANSWER -> FIELD -> RUN AGAIN.
@@ -1405,12 +1565,21 @@ $('scan').addEventListener('click', async () => {
       r.truncated ? `page exceeded the node budget; form controls were rescued` : '',
     ].filter(Boolean);
 
+    /**
+     * ⛔ NO `.fig` WHEN THERE IS NO FIGURE.
+     *
+     * `.fig` is Archivo Black at 20px — it exists to set the NUMBER in "4 values would
+     * be withheld". These two branches have no number, so they put an EM DASH in it,
+     * and a 20px black-weight em dash renders as a heavy white bar floating before the
+     * sentence. It reads as a rendering fault, and it is decoration standing exactly
+     * where this panel puts information.
+     */
     $('phase').innerHTML = opaque
-      ? `<b class="fig">—</b> this is a `
+      ? `this is a `
         + `${esc(opaque.kind === 'application/pdf' ? 'PDF' : opaque.kind)}; its contents `
         + `are drawn outside the page and cannot be read`
       : blind
-      ? `<b class="fig">—</b> this page could not be read`
+      ? `this page could not be read`
       : orgOnly
         ? `<b class="fig">${num(orgContacts)}</b> site contact `
           + `${orgContacts === 1 ? 'address' : 'addresses'} withheld, no personal data`
@@ -1460,8 +1629,13 @@ $('scan').addEventListener('click', async () => {
             ? `<div class="warnbox"><b>This page could not be read, so this is not a `
               + `clean result.</b><br>Its content sits inside a frame or a closed shadow `
               + `root, which an extension cannot see into from the top of the page. `
-              + `${num(r.nodeCount ?? 0)} element${(r.nodeCount ?? 0) === 1 ? '' : 's'} `
-              + `were readable. Nothing was transmitted, and nothing was judged.</div>`
+              // ⚠ The VERB has to agree too. The noun was pluralised and "were" was
+              // hardcoded, so the commonest case of this screen — a frame-only page
+              // yielding exactly one node — read "1 element were readable" to anyone
+              // who opened it. This card is the one that argues we are being careful.
+              + `${num(r.nodeCount ?? 0)} element`
+              + `${(r.nodeCount ?? 0) === 1 ? ' was' : 's were'} readable. `
+              + `Nothing was transmitted, and nothing was judged.</div>`
             : `<div class="hint"><b>Nothing personal on this page yet.</b> Most pages hold `
               + `none until you type something.<br>Put a made-up PAN such as `
               + `<span class="tok" translate="no">ABCPE1234F</span> into a field you can `
@@ -1516,7 +1690,13 @@ $('scan').addEventListener('click', async () => {
  * keyboard activation as one gesture.
  */
 if (!STILL) {
-  for (const sel of ['#run', '#scan', '#stop', '.ex', '#settings button']) {
+  // ⛔ NOT `#settings button` any more. That now matches the full-bleed menu rows,
+  // and scaling a row that runs edge to edge pulls it away from both walls of the
+  // panel — a press gesture that looks like a rendering fault. In the recording the
+  // rows answer with a background wash and nothing else; only real buttons move.
+  // `.ex` left this list for the same reason: it is a full-bleed row too, and the
+  // rule has to be one rule or it is just a preference applied unevenly.
+  for (const sel of ['#run', '#scan', '#stop', '#settings .srvrow button']) {
     for (const el of Array.from(document.querySelectorAll(sel))) {
       press(el as HTMLElement, (target) => {
         void animate(target, { scale: 0.972 }, { type: 'spring', stiffness: 900, damping: 42 });
