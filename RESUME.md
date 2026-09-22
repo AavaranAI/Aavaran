@@ -2,6 +2,75 @@
 
 **READ THIS FIRST.**
 
+## ⭐⭐⭐ PICK UP HERE — 23 Sep 2026 (supersedes the 20 Sep block below)
+
+Session narrative: `~/Documents/_SESSION-2026-09-21-github-profile-and-publishing.md`.
+No code changed on 22–23 Sep. Tree still clean at `4504192`.
+
+### ⛔⛔ CI IS DEAD — AND IT IS A BILLING BLOCK, NOT A BROKEN BUILD
+
+The last four runs "failed" in **3 seconds with ZERO steps executed**. GitHub's annotation:
+
+> *"The job was not started because recent account payments have failed or your spending
+> limit needs to be increased."*
+
+```bash
+JID=$(gh api repos/AavaranAI/Aavaran/actions/runs/<run_id>/jobs --jq '.jobs[0].id')
+gh api repos/AavaranAI/Aavaran/check-runs/$JID/annotations   # the ONLY place the reason appears
+```
+⚠ `gh run view --log-failed` says *"log not found"* — there are no logs, nothing ran.
+**Do not go hunting a test bug.** `./test-all.sh --full` = 32/32 locally is still true.
+
+⚠ **The 20 Sep block below calls `033823d` the clean all-green state. CI failed on that
+commit too** — local green and CI green were never the same claim.
+
+**Cause:** `AavaranAI` is a **free-plan org**, the repo is **private**, so Actions minutes
+are metered — and the matrix is `[ubuntu, windows, macos]` where **macOS bills 10×,
+Windows 2×**. Options (all cost money or change config, **none taken**): drop macOS+Windows
+from the matrix · make the repo public after judging · raise the spending limit.
+
+⛔ **`outreach/email-to-spoc.md` says "Seventeen checks run on every push across Windows,
+macOS and Linux." THAT IS NOW FALSE.** Fix the line before the email goes to Dr. Sarkar.
+
+### ✅ THE PRIVACY POLICY IS HOSTED — store blocker #1 of 4 is gone
+
+**https://aavaranai.github.io/privacy/** — public repo `AavaranAI/privacy`, GitHub Pages,
+rendered from `outreach/PRIVACY-POLICY.md`. Verified 200 with correct content.
+`STORE-SUBMISSION.md` §"Privacy policy" is now satisfied; put this URL in both listings.
+
+### ✅ THE CHROME WEB STORE PACK IS BUILT → `~/Desktop/Aavaran-Chrome-Store/`
+
+`Aavaran-v0.4.0-chrome-store.zip` (46 MB) · `screenshots/01…05` (1280×800) ·
+`icon128.png` · **`SUBMIT.md`** — the whole process with every field ready to paste.
+
+Built from a **fresh clone of tag v0.4.0**. Two defects found and worked around:
+
+1. ⛔ **The repo's zip CANNOT be uploaded.** `package-extension.sh` nests everything in
+   `privacy-agent-extension/`; the Store needs `manifest.json` at the **ZIP ROOT** and
+   rejects a nested one with *"Manifest file is missing or unreadable."* Right for
+   *Load unpacked*, fatal for upload.
+2. ⛔ **The DEFAULT package is scan-only** (omits 28 MB models + 97 MB ort, to clear
+   Gmail's 25 MB limit) — but the listing promises face blurring and image redaction.
+   **Use `./scripts/package-extension.sh --full`.**
+
+✅ Verified by **loading the built package in Chrome**: service worker registers, zero
+errors. Both `.onnx` models and the ORT WASM confirmed inside the zip.
+⇒ On the Privacy tab, **"remote code？" = NO** — `chrome.runtime.getURL('ort/')` means
+everything executable is bundled. That is the #1 rejection reason for ML extensions.
+
+**Still needed from him:** the **$5** developer registration (NOT paid). Review is slow
+(`<all_urls>` on a privacy tool) — **it will not be approved before 30 Sep and does not
+need to be.** The listing is the auto-update route for the **December finale**.
+
+### ❓ THE ONE QUESTION THAT BLOCKS THE EMAIL
+
+On 20 Sep he posted an httpbin POST response showing a completed pizza order. **It was
+never established whether Aavaran did that or he filled it manually.** It decides whether
+the SPOC email may claim *"completes a real multi-step task… in about half a minute end to
+end"*. **ASK HIM.** Item 1 of the 20 Sep list below is the same open item.
+
+---
+
 ## ⭐⭐ PICK UP HERE — close of 20 Sep 2026
 
 **Tree CLEAN, both remotes PUSHED (`origin` and `personal` both at `033823d`),
