@@ -26,9 +26,9 @@ everything, or no assistant. We're building the third option.
 
 ## Platforms
 
-The suite runs on Linux, macOS and Windows. ⚠ **CI is not running right now** — the org
-hit its Actions spending limit on 20 Sep 2026 and no job has started since, so the
-badge/history means nothing until that is settled. Run it locally. On **Windows use WSL** if
+CI runs the suite on Linux, macOS and Windows on every push. ⚠ If a run ever fails in
+a few seconds with **zero steps**, that is a billing block and not a broken build —
+read the check-run annotations before touching code. On **Windows use WSL** if
 you can: under Git Bash the server-dependent failure drills cannot run (a background
 uvicorn is spawned but never binds), so they skip with a message. Everything else works.
 
