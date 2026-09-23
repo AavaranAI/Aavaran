@@ -20,11 +20,40 @@ into the live income-tax portal. **He then confirmed one letter of it is wrong, 
 never a real PAN.** Both fixtures read `ABCPE1234F`/`ABCPE1234FT` now regardless.
 **Do not re-raise this as a leak.**
 
-⚠⚠ **The old value is deliberately NOT reproduced here.** It was, for one commit
-(`9daa4ce`), and the release zip built from that tree carried it straight back — a
-document explaining a scrub had quoted the very string it was explaining. ⇒ **Writing
-the incident up is itself a way to re-introduce the value.** Name the file and the
-shape; never the literal.
+⚠⚠⚠ **NO SCRUBBED VALUE IS REPRODUCED IN THIS FILE, AND THAT IS DELIBERATE — IT WENT
+WRONG TWICE IN ONE NIGHT.** Both times, this note quoted the very literal it was
+explaining, and both times the release zip built from that tree carried it straight back
+out to the public:
+
+1. `9daa4ce` — the PAN-shaped string. Caught scanning the first v0.4.1 build.
+2. `47493c5` — the teammate's Gmail local-part, sitting **ten lines above this warning**.
+   It shipped in the published v0.4.1 source zip before being caught.
+
+Both times the **tree** scan came back clean and only the **built artefact** showed it.
+The tag was moved and the asset re-uploaded on each occasion.
+
+⇒ **Writing the incident up is the most reliable way to re-introduce the value.** Name
+the file and the shape; never the literal.
+
+⛔ **A THIRD time, in the very sentence above.** The first draft of this warning ended
+with a ready-to-paste `grep` — and that grep spelled out the roll numbers in full. **The
+scanner you write to catch the leak is itself a place the leak lives.** The patterns now
+live OUTSIDE the repo, in `~/Desktop/Aavaran-prepublish-backup/leak-patterns.txt`.
+
+**Run this before any push that touches this block, and before any release:**
+```bash
+git ls-files -z | xargs -0 grep -nIE -f ~/Desktop/Aavaran-prepublish-backup/leak-patterns.txt
+# no output = clean.  Then scan the BUILT ARTEFACT too — that is where the tree scan lies:
+unzip -p <the-release-zip> | grep -aE -f ~/Desktop/Aavaran-prepublish-backup/leak-patterns.txt
+```
+
+⚠⚠ **Two earlier drafts of that command silently could not fail.** `grep -F` ignores the
+roll-number pattern because it is a regex, and `grep -E` on macOS **does not honour
+`\b`**, so the pattern matched nothing and printed the same reassuring silence as a clean
+tree. `leak-patterns.txt` has the prefixes and `\b` stripped, and is **control-tested**:
+it matches every scrubbed literal, matches a bare roll number, and does not fire on the
+synthetic replacements. ⇒ **A leak scanner that has never been shown to go red is not
+evidence.** Same family as [[control-must-not-contain-treatment]].
 
 ⚠⚠ **Never paste a real value into a fixture.** This project's fixtures are built from
 pages we were really signed in to, which is exactly how the mobile and the Gmail got in —
