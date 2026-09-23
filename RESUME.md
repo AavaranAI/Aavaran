@@ -8,14 +8,40 @@ Session narrative: `~/Documents/_SESSION-2026-09-21-github-profile-and-publishin
 
 ### ⛔⛔ THIS REPO IS PUBLIC NOW, AND THIS FILE IS IN IT
 
-History was rewritten on 23 Sep 2026 to take out real personal data before publishing:
-a **real PAN** (typed into the live income-tax portal during testing, and committed into
-`sanitize.test.ts` + `dom.test.ts`), a **real mobile** quoted in a panel source comment,
-**a teammate's private Gmail** in `dom.test.ts`, and **five classmates' roll numbers**.
-All replaced with synthetic values; `./test-all.sh` is 24/24 either side of the change.
+History was rewritten on 23 Sep 2026 to take real personal data out before publishing:
+**Harsh's real mobile** quoted in a panel source comment, **a teammate's private Gmail**
+(`bvmanas@`) in `dom.test.ts` twice, and **six students' roll numbers**. All replaced
+with synthetic values; `./test-all.sh` is 24/24 either side of the change, so the
+substitutions are behaviour-preserving.
 
-⚠ **Never paste a real value into a fixture again.** This project's own fixtures are
-built from pages we were really signed in to, which is exactly how it happened.
+⚠ The PAN-shaped string `IMQPB9685C` in `sanitize.test.ts`/`dom.test.ts` was scrubbed in
+the same pass, on the assumption it was Harsh's real PAN — the provenance said so, since
+it was typed into the live income-tax portal. **He then confirmed one letter of it is
+wrong, so it was never a real PAN.** It is `ABCPE1234F`/`ABCPE1234FT` now regardless.
+**Do not re-raise this as a leak.**
+
+⚠⚠ **Never paste a real value into a fixture.** This project's fixtures are built from
+pages we were really signed in to, which is exactly how the mobile and the Gmail got in —
+and `scripts/capture-page.mjs`'s own docstring had said *"never while logged in"* the
+whole time. ⇒ **A rule written in a docstring is not a control.**
+
+⚠ **A `git filter-repo` + force-push does NOT delete anything from GitHub.** The
+pre-rewrite commits stay reachable by SHA until GitHub garbage-collects; verified by
+fetching `7d17938` from the public mirror *after* the force-push and getting the old file
+back. ⇒ **Purging history and purging what is downloadable are two different jobs.**
+`outreach/GITHUB-SUPPORT-TICKET.md` (gitignored) is the drafted purge request.
+
+⛔ **`vansh-attention/sih_Vtransformer` is PUBLIC and is not ours to fix** — push but no
+admin. It carried the mobile, the Gmail and the roll numbers for days. Vansh must
+**delete** it; archiving does not help, an archived repo stays readable.
+`outreach/message-to-vansh-delete-mirror.txt` (gitignored) is the message to send.
+
+⛔ **Release assets are a separate leak surface and the rewrite does not touch them.**
+`v0.4.0`, `v0.3.0` and `v0.2.3` each shipped a `-full.zip` built by `git archive` of the
+old tag, and all three carried the data. Found by **downloading the published asset**,
+not by reading the repo. All three rebuilt from the sanitised tags, re-uploaded with
+`--clobber`, and re-verified **by downloading them again**. The `-chrome.zip` assets were
+always clean — they are built artefacts and carry no test sources.
 
 ⚠ **Thirteen internal documents are no longer in git** — they are on disk and gitignored:
 `outreach/email-to-spoc.md`, `Email-Draft-for-Team-Review.pdf`, `ORG-MIGRATION.*`,
@@ -27,30 +53,72 @@ them, and `outreach/build-email-pdf.py` cannot run there. Pre-rewrite history is
 
 ⇒ **Write nothing here you would not publish.** This file is now a public document.
 
-### ⛔⛔ CI IS DEAD — AND IT IS A BILLING BLOCK, NOT A BROKEN BUILD
+### ✅ CI IS GREEN AGAIN — it was a BILLING block, and going public fixed it
 
-The last four runs "failed" in **3 seconds with ZERO steps executed**. GitHub's annotation:
+**Run `35773248434`: ubuntu, macOS and Windows all `success`, 11 steps each, 5m37s.**
+First green run since 20 Sep. `AavaranAI` is a free-plan org, so a *private* repo meters
+Actions minutes and the `[ubuntu, windows, macos]` matrix burns them fast (macOS bills
+10×, Windows 2×). **Public repos get unlimited minutes**, so making it public was the fix.
 
-> *"The job was not started because recent account payments have failed or your spending
-> limit needs to be increased."*
+⚠ **If it ever goes dark again, the symptom is a failure in a few seconds with ZERO steps
+executed.** That is a startup block, not a test failure — do not go hunting a bug:
 
 ```bash
 JID=$(gh api repos/AavaranAI/Aavaran/actions/runs/<run_id>/jobs --jq '.jobs[0].id')
 gh api repos/AavaranAI/Aavaran/check-runs/$JID/annotations   # the ONLY place the reason appears
 ```
-⚠ `gh run view --log-failed` says *"log not found"* — there are no logs, nothing ran.
-**Do not go hunting a test bug.** `./test-all.sh --full` = 32/32 locally is still true.
+`gh run view --log-failed` says *"log not found"* — there are no logs, because nothing ran.
 
-⚠ **The 20 Sep block below calls `033823d` the clean all-green state. CI failed on that
-commit too** — local green and CI green were never the same claim.
+⚠ **`033823d` was recorded below as the clean all-green state. CI failed on that commit
+too.** Local green and CI green were never the same claim, and the file said they were.
 
-**Cause:** `AavaranAI` is a **free-plan org**, the repo is **private**, so Actions minutes
-are metered — and the matrix is `[ubuntu, windows, macos]` where **macOS bills 10×,
-Windows 2×**. Options (all cost money or change config, **none taken**): drop macOS+Windows
-from the matrix · make the repo public after judging · raise the spending limit.
+✅ **The "Seventeen checks" line is fixed.** `outreach/email-to-spoc.md` claimed
+*"Seventeen checks run on every push across Windows, macOS and Linux"* while no job had
+started for three days — and the count was wrong anyway, CI runs `./test-all.sh` which
+is **24**. README and ONBOARDING asserted the same thing and are corrected too.
+⇒ **A claim about CI goes stale in BOTH directions**: the replacement wording written
+this morning said "CI is not running", and was itself false four hours later.
 
-⛔ **`outreach/email-to-spoc.md` says "Seventeen checks run on every push across Windows,
-macOS and Linux." THAT IS NOW FALSE.** Fix the line before the email goes to Dr. Sarkar.
+### ⏭⏭ DO THESE NEXT — authoritative as at 23 Sep evening
+
+**Needs him, and the 30 Sep portal deadline runs on the first three:**
+
+1. **Send Vansh the message** — `outreach/message-to-vansh-delete-mirror.txt` (gitignored).
+   He must **delete**, not archive, `vansh-attention/sih_Vtransformer`.
+2. **Team ID** — still the ONLY placeholder on deck slide 1. Theme is `Smart Automation`
+   and is already in `deck/build.py`. Verified 23 Sep that the shipped `.pptx` is
+   **byte-identical in content** to a fresh `python3 deck/build.py`, so the deck is not
+   stale; fill line 54, re-run, then **re-export the PDF from PowerPoint** (the script
+   does not produce the `.pdf` or the `slide-*.jpg`).
+3. **The SPOC email** — `outreach/email-to-spoc.md` → pujasarkar@iimmumbai.ac.in,
+   attaching `SIH26171-Project-Report.pdf`. Its CI sentence is now true again.
+   ⚠ **But see item 5 before sending** — one claim in it is still unproven.
+4. **Send the designers the pack** — `design/` regenerated 20 Sep, still not sent.
+
+**Code — one open item, and it is the one that gates the email:**
+
+5. ⛔ **Drive `httpbin.org/forms/post` end to end, by hand.** Five rounds of fixes
+   converge on that page and the round trip has **never once been run together**. On
+   20 Sep he posted an httpbin POST showing a completed pizza order and **nobody
+   established whether Aavaran did it or he filled it in manually**. The email claims
+   *"completes a real multi-step task… in about half a minute end to end"*, and ⚠ *half
+   a minute* is the **DOM-only** number — with the vision stage running it is **63 s**.
+   `demo/needs-value.html` is the smaller ask-and-fill version.
+
+**Open deliberately, not forgotten:** C2 (read inside iframes — needs a design, not a
+flag; `bench/corpus-candidates.txt` group 4 gives it two real pages to design against)
+and Firebase sync (deferred, not refused — the honest version is client-side encryption
+so it only ever holds ciphertext).
+
+✅ **C1 is DONE (23 Sep)** — `bench/corpus-candidates.txt`, 23 pages grouped by what each
+one is for, parse-checked against the `--list` format. The realpages README also stopped
+telling people to refresh with `curl`, which `capture-page.mjs` had already measured as
+useless on these portals.
+
+✅ **Chrome Store $5 registration: DEFERRED, his call 23 Sep.** Approval would not land
+before 30 Sep and does not need to — the listing is for the December finale. The pack at
+`~/Desktop/Aavaran-Chrome-Store/` was re-verified 23 Sep: manifest at the ZIP root, no
+test sources, no personal data. **It does not need rebuilding after the scrub.**
 
 ### ✅ THE PRIVACY POLICY IS HOSTED — store blocker #1 of 4 is gone
 
