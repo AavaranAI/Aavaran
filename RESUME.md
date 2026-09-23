@@ -85,6 +85,38 @@ is **24**. README and ONBOARDING asserted the same thing and are corrected too.
 ⇒ **A claim about CI goes stale in BOTH directions**: the replacement wording written
 this morning said "CI is not running", and was itself false four hours later.
 
+### 📦 RELEASED v0.4.1 — `github.com/AavaranAI/Aavaran/releases/tag/v0.4.1` ← LATEST
+
+**7 assets, marked latest.** `Aavaran-v0.4.1-chrome.zip` (1.6 MB, scan-only, Load
+unpacked), `Aavaran-v0.4.1-full.zip` (9.5 MB, source + server, `git archive` of the tag),
+both `Start Aavaran` and both `Update Aavaran` launchers, `INSTALL-OLLAMA.txt`. Both zips
+clear Gmail's 25 MB.
+
+**No product behaviour changed.** The version exists so the published artefacts match the
+sanitised tree. ✅ **Unlike 0.4.0 this is NOT a breaking change between the halves** — the
+`x-aavaran-client` contract is untouched, so 0.4.0 and 0.4.1 interoperate in both
+directions and the halves can be updated one at a time.
+
+⚠ **The version lives in BOTH manifests and nowhere else.** `server/main.py:_server_version()`
+reads `extension/manifest.json` deliberately — one source of truth — and `build.mjs` fails
+the build if the Chrome and Firefox manifests drift on a non-host key. `package.json` still
+says `0.1.0` and is not used for versioning.
+
+⛔⛔ **THE FIRST 0.4.1 BUILD CARRIED THE VALUE STRAIGHT BACK.** The sanitisation note added
+to this file on 23 Sep **quoted the PAN-shaped literal it was explaining**, so the source
+zip built from that tree contained it again. The tree scan was clean; only scanning the
+**built artefact** found it. The tag was moved and the zips rebuilt.
+⇒ **Writing the incident up is itself a way to re-introduce the value.** Name the file and
+the shape, never the literal. Same family as [[history-rewrite-does-not-purge]].
+
+✅ **Verified by DOWNLOADING all 7 published assets**, not the local files: both zips report
+`0.4.1`, the chrome zip stamps `variant: scan-only`, and neither carries personal data.
+⚠ The full zip does contain the string `/Users/` in three places — `package-extension.sh`'s
+own guard literal, `panel-shot.mjs`'s `/Users/you` placeholder, and a prose mention here.
+**His real home path appears zero times.** The no-`/Users/` guard is about the shipped
+*extension* package, which is clean; a source archive containing the guard's own source is
+expected.
+
 ### ⏭⏭ DO THESE NEXT — authoritative as at 23 Sep evening
 
 **Needs him, and the 30 Sep portal deadline runs on the first three:**
