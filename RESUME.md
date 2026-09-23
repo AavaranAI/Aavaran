@@ -14,11 +14,17 @@ History was rewritten on 23 Sep 2026 to take real personal data out before publi
 with synthetic values; `./test-all.sh` is 24/24 either side of the change, so the
 substitutions are behaviour-preserving.
 
-⚠ The PAN-shaped string `IMQPB9685C` in `sanitize.test.ts`/`dom.test.ts` was scrubbed in
-the same pass, on the assumption it was Harsh's real PAN — the provenance said so, since
-it was typed into the live income-tax portal. **He then confirmed one letter of it is
-wrong, so it was never a real PAN.** It is `ABCPE1234F`/`ABCPE1234FT` now regardless.
+⚠ A PAN-shaped string in `sanitize.test.ts`/`dom.test.ts` was scrubbed in the same pass,
+on the assumption it was Harsh's real PAN — the provenance said so, since it was typed
+into the live income-tax portal. **He then confirmed one letter of it is wrong, so it was
+never a real PAN.** Both fixtures read `ABCPE1234F`/`ABCPE1234FT` now regardless.
 **Do not re-raise this as a leak.**
+
+⚠⚠ **The old value is deliberately NOT reproduced here.** It was, for one commit
+(`9daa4ce`), and the release zip built from that tree carried it straight back — a
+document explaining a scrub had quoted the very string it was explaining. ⇒ **Writing
+the incident up is itself a way to re-introduce the value.** Name the file and the
+shape; never the literal.
 
 ⚠⚠ **Never paste a real value into a fixture.** This project's fixtures are built from
 pages we were really signed in to, which is exactly how the mobile and the Gmail got in —
