@@ -63,7 +63,8 @@ const ITD_FIELD = {
 } as never;
 
 const kindCases: Array<{ name: string; field: unknown; text: string; wantKind: string }> = [
-  // His exact value: 11 characters, so it is neither a PAN nor an Aadhaar.
+  // 11 characters, so it is neither a PAN nor an Aadhaar. Taken from a real session
+  // on the income-tax portal, with the value replaced by a synthetic one.
   { name: 'ITD User ID, malformed value', field: ITD_FIELD, text: 'ABCPE1234FT',
     wantKind: 'SENSITIVE' },
   // A real PAN in the same ambiguous field: the value settles it.
@@ -116,7 +117,7 @@ const orgCases: Array<{ name: string; raw: string; sig: FieldSignals | undefined
   { name: 'grievance@ on a .gov.in host', raw: 'grievance@mygov.gov.in',
     sig: { tag: 'td' }, host: 'services.mygov.gov.in', want: true },
 
-  // ⛔ The student's own address, on the very same page. Typed into the login box.
+  // ⛔ The signed-in user's own address, on the very same page. Typed into the login box.
   { name: 'user address in the login field', raw: 'student.a@example.com',
     sig: { tag: 'input', name: 'username' }, host: PMV, want: false },
   /**

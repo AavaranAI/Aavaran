@@ -69,7 +69,9 @@ Run.
 | **Disk** | ~7 GB for the vision model, ~230 MB for everything else |
 | **RAM** | 16 GB works; 8 GB will struggle with the 7B model |
 
-**Platforms.** CI runs the full suite on **Linux, macOS and Windows** on every push.
+**Platforms.** The suite is written to run on **Linux, macOS and Windows**, and did so in
+CI until 20 Sep 2026. ⚠ CI is currently not running — the org hit its Actions spending
+limit, so no job has started since. Run `./test-all.sh` locally; that is the live check.
 
 | | |
 |---|---|

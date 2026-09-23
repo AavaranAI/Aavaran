@@ -1945,9 +1945,10 @@ says IIM Mumbai is running none and expects at most ~3 teams to apply, so the em
    for the team, attaching `SIH26171-Project-Report.pdf`. To: **pujasarkar@iimmumbai.ac.in**
    (Assistant Professor, Analytics & Data Science). Nothing is outstanding in it.
 2. ✅ **Team CONFIRMED**, all IIM Mumbai, 2 female (requirement is ≥1):
-   Harsh Bajpai [roll] · Jinshri Jain [roll] · Vansh Khosla [roll] ·
-   Aarna Chauhan [roll] · Manas Bharadia [roll] · Siddhartha Chaudhary [roll].
-   Addresses are `firstname.rollnumber@iimmumbai.ac.in` (verified on Harsh's own).
+   Harsh Bajpai · Jinshri Jain · Vansh Khosla ·
+   Aarna Chauhan · Manas Bharadia · Siddhartha Chaudhary.
+   Roll numbers are deliberately not recorded here — this file is public.
+   Addresses follow `firstname.rollnumber@iimmumbai.ac.in` (verified on Harsh's own).
    ⛔ He does NOT want "team leader" used anywhere.
 3. Portal fields for deck slide 1: **Theme, Team ID, Team Name**, then re-export the
    PDF **from PowerPoint**.
@@ -2345,14 +2346,15 @@ record; the "⭐ PICK UP HERE" block at the top of this file is the state.
 2. ~~Names undecided~~ — **closed 17 Sep.** Team **Vagabonds**, project **Aavaran**.
 3. ~~Vansh must transfer the repo~~ — **closed.** The move is done; all he has left is
    to *archive* the old `vansh-attention/sih_Vtransformer`.
-4. Programme/roll fields in the email: **DONE** (BS-DSBM 2026-30, [roll], 9876543210).
+4. Programme/roll fields in the email: **DONE** (BS-DSBM 2026-30, roll and mobile filled).
 5. AI detectors: Pangram says 100%, Grammarly 6%. **He decided it's fine** — report only
    goes to Ma'am, team makes the PPT. Do not re-litigate.
 
 ### Team (confirmed)
-Harsh Bajpai [roll] · Jinshri Jain [roll] · Vansh Khosla [roll] · Aarna Chauhan [roll] ·
-Manas Bharadia [roll] · Siddhartha Chaudhary [roll]. All IIM Mumbai, 2 female.
-Emails `firstname.rollnumber@iimmumbai.ac.in` (verified on Harsh's). Slack workspace live.
+Harsh Bajpai · Jinshri Jain · Vansh Khosla · Aarna Chauhan ·
+Manas Bharadia · Siddhartha Chaudhary. All IIM Mumbai, 2 female.
+Emails follow `firstname.rollnumber@iimmumbai.ac.in` (verified on Harsh's). Roll numbers
+are deliberately not recorded here — this file is public. Slack workspace live.
 ⛔ **Never use "team leader"** anywhere. ⛔ Roles are presented as authorship — his call.
 
 ## ⭐ THE OFFICIAL ISRO RUBRIC — pulled from the portal 17 Sep
