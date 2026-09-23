@@ -47,3 +47,20 @@ demo/privacy-agent-extension/
 # A build artefact in git is a stale build waiting to be mistaken for a current one.
 demo/privacy-agent-extension.zip
 extension/build-info.json
+
+# ── Private: internal team correspondence, kept on disk, never published ──
+# Removed from git history on 23 Sep 2026 when the repo was made public.
+# They carried roll numbers, a personal mobile and a teammate's private email.
+outreach/email-to-spoc.md
+outreach/Email-Draft-for-Team-Review.pdf
+outreach/ORG-MIGRATION.md
+outreach/ORG-MIGRATION.pdf
+outreach/WHO-OWNS-WHAT.md
+outreach/WHO-OWNS-WHAT.pdf
+outreach/YOUR-AREA-BRIEFING.md
+outreach/YOUR-AREA-BRIEFING.pdf
+outreach/NAME-OPTIONS.md
+outreach/NAME-OPTIONS.pdf
+outreach/message-to-team.txt
+outreach/SIH2026-Questions-for-Institute.pdf
+outreach/SIH2026-IIM-Mumbai-Briefing.pdf

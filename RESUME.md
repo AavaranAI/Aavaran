@@ -5,7 +5,27 @@
 ## ⭐⭐⭐ PICK UP HERE — 23 Sep 2026 (supersedes the 20 Sep block below)
 
 Session narrative: `~/Documents/_SESSION-2026-09-21-github-profile-and-publishing.md`.
-No code changed on 22–23 Sep. Tree still clean at `4504192`.
+
+### ⛔⛔ THIS REPO IS PUBLIC NOW, AND THIS FILE IS IN IT
+
+History was rewritten on 23 Sep 2026 to take out real personal data before publishing:
+a **real PAN** (typed into the live income-tax portal during testing, and committed into
+`sanitize.test.ts` + `dom.test.ts`), a **real mobile** quoted in a panel source comment,
+**a teammate's private Gmail** in `dom.test.ts`, and **five classmates' roll numbers**.
+All replaced with synthetic values; `./test-all.sh` is 24/24 either side of the change.
+
+⚠ **Never paste a real value into a fixture again.** This project's own fixtures are
+built from pages we were really signed in to, which is exactly how it happened.
+
+⚠ **Thirteen internal documents are no longer in git** — they are on disk and gitignored:
+`outreach/email-to-spoc.md`, `Email-Draft-for-Team-Review.pdf`, `ORG-MIGRATION.*`,
+`WHO-OWNS-WHAT.*`, `YOUR-AREA-BRIEFING.*`, `NAME-OPTIONS.*`, `message-to-team.txt`,
+`SIH2026-Questions-for-Institute.pdf`, `SIH2026-IIM-Mumbai-Briefing.pdf`. References to
+them below are still accurate about the files on disk, but a fresh clone will not have
+them, and `outreach/build-email-pdf.py` cannot run there. Pre-rewrite history is at
+`~/Desktop/Aavaran-prepublish-backup/`.
+
+⇒ **Write nothing here you would not publish.** This file is now a public document.
 
 ### ⛔⛔ CI IS DEAD — AND IT IS A BILLING BLOCK, NOT A BROKEN BUILD
 
