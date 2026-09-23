@@ -4,14 +4,14 @@
 
 ## ⭐⭐⭐ PICK UP HERE — 23 Sep 2026 (supersedes the 20 Sep block below)
 
-Session narrative: `~/Documents/_SESSION-2026-09-21-github-profile-and-publishing.md`.
+Session narrative: `~/Documents/_SESSION-2026-09-23-aavaran-publish.md`.
 
 ### ⛔⛔ THIS REPO IS PUBLIC NOW, AND THIS FILE IS IN IT
 
 History was rewritten on 23 Sep 2026 to take real personal data out before publishing:
-**Harsh's real mobile** quoted in a panel source comment, **a teammate's private Gmail**
-(`bvmanas@`) in `dom.test.ts` twice, and **six students' roll numbers**. All replaced
-with synthetic values; `./test-all.sh` is 24/24 either side of the change, so the
+**Harsh's real mobile** quoted in a panel source comment, **a teammate's private Gmail
+address** in `dom.test.ts` twice, and **six students' roll numbers**. All replaced with
+synthetic values; `./test-all.sh` is 24/24 either side of the change, so the
 substitutions are behaviour-preserving.
 
 ⚠ A PAN-shaped string in `sanitize.test.ts`/`dom.test.ts` was scrubbed in the same pass,
