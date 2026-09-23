@@ -1,0 +1,85 @@
+# Corpus candidates — hand this file to a teammate, not a technique.
+#
+#   node scripts/capture-page.mjs --list bench/corpus-candidates.txt
+#
+# Captures land in bench/realpages/ and bench/realpages-drill.ts picks them up with no
+# further wiring. Re-run ./test-all.sh afterwards: growing this corpus has found a real
+# defect every single time it has grown, so expect the drill to go red and treat that as
+# the point of the exercise rather than as a problem with the capture.
+#
+# ⛔ THE TWO RULES, AND THEY ARE NOT NEGOTIABLE
+#
+# 1. PUBLIC, LOGGED-OUT PAGES ONLY. Never capture while signed in. Everything in
+#    realpages/ is a logged-out page, which is the only reason the drill is allowed to
+#    print every value it withheld. This is not hypothetical: a capture taken during a
+#    signed-in session is how a teammate's personal email address and a real mobile
+#    number ended up committed to this repository, and taking them back out on 23 Sep
+#    2026 required rewriting the whole history.
+# 2. CAPTURE ONLY PAGES YOU MAY CAPTURE. If a site's terms forbid automated access,
+#    leave it out and record it below rather than working around the block.
+#
+# Lines are `name<TAB>url`. Blank lines and #-comments are ignored. A page under 100
+# nodes is refused rather than saved — an un-hydrated shell would join the corpus and
+# test nothing, which is worse than a failed capture.
+#
+# ── Already captured (do not re-add) ────────────────────────────────────────────
+# cleartax · digilocker · hn · incometax · india_gov · mygov · pgportal
+# python_org · rbi · sebi · uidai · wiki_pan · wikipedia
+#
+# ── Known to block automation — recorded, NOT worked around ──────────────────────
+# epfindia, nsdl, passportindia: all three refuse the driver even headed at 12 s.
+# Do not retry these; if one ever becomes capturable, add it here with a note.
+
+
+# ── Group 1: Indian government service portals with real form fields ────────────
+# These are the shape the product exists for — a KYC or identity step on a page the
+# user did not write. Expect PAN, Aadhaar, mobile and name fields.
+
+parivahan	https://parivahan.gov.in/parivahan/
+scholarships	https://scholarships.gov.in/
+eshram	https://eshram.gov.in/
+pmkisan	https://pmkisan.gov.in/
+nfsa	https://nfsa.gov.in/
+ncs	https://www.ncs.gov.in/
+umang	https://web.umang.gov.in/landing/
+myaadhaar	https://myaadhaar.uidai.gov.in/
+eci_voters	https://voters.eci.gov.in/
+abdm	https://abdm.gov.in/
+
+
+# ── Group 2: financial and tax surfaces ─────────────────────────────────────────
+# Login screens and public calculators. The login pages matter because the ambiguous
+# "PAN/ Aadhaar/ Other User ID" field that produced the wrong-KIND bug lives on exactly
+# this kind of screen, and one example of it is not enough to tune against.
+
+gst	https://services.gst.gov.in/services/login
+npstrust	https://www.npstrust.org.in/
+sebi_scores	https://scores.sebi.gov.in/
+irdai	https://irdai.gov.in/
+mca	https://www.mca.gov.in/
+
+
+# ── Group 3: negative controls — pages that should yield NOTHING ────────────────
+# Just as important as the positives. The corpus needs pages where any withholding at
+# all is a false positive, and the existing three (python_org, wikipedia, hn) are all
+# English and all Western. These add Indian-language and Indian-context prose, which is
+# where the detector has actually been wrong: भारत सरकार was withheld as a person,
+# because सरकार is both a Bengali surname and the ordinary word for "government".
+
+bbc_news	https://www.bbc.com/news
+arxiv	https://arxiv.org/list/cs.CR/recent
+mygov_hindi	https://www.mygov.in/hi/
+wikipedia_hi	https://hi.wikipedia.org/wiki/भारत
+wikipedia_bn	https://bn.wikipedia.org/wiki/ভারত
+wikipedia_ta	https://ta.wikipedia.org/wiki/இந்தியா
+
+
+# ── Group 4: embedded-frame shapes ──────────────────────────────────────────────
+# A payment or KYC step embedded from another service is ordinary on Indian portals,
+# and the content script runs in the top frame only, so the frame is a rectangle we
+# never see into while captureVisibleTab photographs its pixels regardless. Frames are
+# currently masked as unreadableRegions; reading inside them is item C2 and still open.
+# These pages are here to give that work something real to be designed against.
+
+razorpay_demo	https://razorpay.com/demo/
+stripe_checkout	https://checkout.stripe.dev/preview

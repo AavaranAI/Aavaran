@@ -52,8 +52,30 @@ One genuine false positive remains: python.org carries a 15-digit number that pa
 Luhn check and is redacted as a card. That is the checksum working exactly as designed
 and colliding anyway. Recorded rather than special-cased.
 
+## Growing the corpus
+
+`bench/corpus-candidates.txt` is a ready list of 23 pages nobody has captured yet, with
+the reason each one is worth having. Hand it to a teammate:
+
+```bash
+node scripts/capture-page.mjs --list bench/corpus-candidates.txt
+```
+
+⛔ **Public, logged-out pages only, and never while signed in.** Every file here is a
+logged-out page, which is the only reason the drill may print every value it withheld.
+A signed-in capture is how a teammate's personal email address reached this repository.
+
 ## Refreshing the pages
 
 They are saved HTML, so they will drift from the live sites. That is fine — they are a
-robustness drill, not a correctness oracle. To refresh, re-fetch with `curl -sL` into
-this directory.
+robustness drill, not a correctness oracle.
+
+⛔ **Do not refresh with `curl`.** This file used to say `curl -sL`, and that advice was
+wrong: probed on six real portals curl returned three redirects, two JavaScript shells
+with a single input between them, and a 403. The pages that matter are React and Angular
+shells whose pre-JavaScript HTML has no form fields at all, so a curl capture tests
+nothing. Use the capture tool, which drives headed Chrome and saves the rendered DOM:
+
+```bash
+node scripts/capture-page.mjs <url> <name>
+```
